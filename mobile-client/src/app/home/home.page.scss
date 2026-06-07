@@ -1,0 +1,143 @@
+.connection-setup {
+  padding: 16px;
+  background: #2a2a2a;
+  color: white;
+  
+  ion-item {
+    --background: transparent;
+    --color: white;
+    --placeholder-color: #888;
+  }
+
+  .advanced-settings {
+    margin-top: 20px;
+    background: #333;
+    border-radius: 12px;
+    padding-bottom: 10px;
+
+    ion-list-header {
+      --background: transparent;
+      color: #aaa;
+      font-size: 13px;
+      min-height: 30px;
+    }
+
+    ion-note {
+      color: var(--ion-color-primary);
+      font-weight: bold;
+    }
+
+    ion-range {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+}
+
+ion-content {
+  --background: #1e1e1e;
+  --overflow: hidden; /* Ngăn cuộn trang web */
+}
+
+/* Container chính để chia không gian */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.touchpad {
+  flex: 1; /* Chiếm toàn bộ diện tích ở giữa */
+  width: 100%;
+  background-color: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  touch-action: none;
+  user-select: none;
+}
+
+.instructions {
+  text-align: center;
+  opacity: 0.4;
+  ion-icon {
+    font-size: 80px;
+    margin-bottom: 10px;
+    color: var(--ion-color-primary);
+  }
+}
+
+.status {
+  text-align: center;
+  p {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  small {
+    color: var(--ion-color-success);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 10px;
+  }
+}
+
+.fab-keyboard {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  background: var(--ion-color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 100;
+  pointer-events: auto; /* Đảm bảo vẫn nhận click dù nằm trong touchpad */
+
+  ion-icon {
+    font-size: 30px;
+    color: white;
+  }
+
+  &:active {
+    transform: scale(0.9);
+    background: var(--ion-color-primary-shade);
+  }
+}
+
+.click-buttons {
+  height: 140px; /* Tăng chiều cao nút cho dễ bấm */
+  display: flex;
+  background: #222;
+  border-top: 1px solid #444;
+  padding-bottom: constant(safe-area-inset-bottom); /* iOS Safe Area */
+  padding-bottom: env(safe-area-inset-bottom);
+  
+  .btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 24px;
+    color: #888;
+    transition: all 0.05s;
+    user-select: none;
+    
+    &:active {
+      background: var(--ion-color-primary);
+      color: white;
+      font-size: 22px; /* Hiệu ứng nhấn */
+    }
+  }
+  
+  .left {
+    border-right: 1px solid #444;
+  }
+}

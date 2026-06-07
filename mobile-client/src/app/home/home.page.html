@@ -1,0 +1,90 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      MobileControl V6
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleConnect()" (touchstart)="$event.stopPropagation(); toggleConnect()" [color]="connected ? 'success' : 'primary'">
+        {{ connected ? 'Connected' : 'Connect' }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="main-container">
+    <!-- Hidden Textarea Bàn phím V6 (Hai dấu cách) -->
+    <textarea #hiddenInput 
+           style="position: absolute; opacity: 0; pointer-events: none;"
+           (input)="onKeyInput($event)"
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="none"
+           spellcheck="false"
+           inputmode="text"></textarea>
+
+    <!-- Cấu hình IP -->
+    <div class="connection-setup" *ngIf="!connected">
+      <ion-item lines="inset">
+        <ion-label position="stacked">PC Server IP Address</ion-label>
+        <ion-input [(ngModel)]="serverIp" placeholder="e.g. 192.168.1.5"></ion-input>
+      </ion-item>
+
+      <div class="advanced-settings">
+        <ion-list-header>
+          <ion-label>Tốc độ chuột (Sensitivity)</ion-label>
+          <ion-note slot="end">{{ sensitivity | number:'1.1-1' }}x</ion-note>
+        </ion-list-header>
+        <ion-item lines="none">
+          <ion-range min="0.5" max="5" step="0.1" [(ngModel)]="sensitivity" color="primary">
+            <ion-icon slot="start" size="small" name="snow-outline"></ion-icon>
+            <ion-icon slot="end" name="rocket-outline"></ion-icon>
+          </ion-range>
+        </ion-item>
+
+        <ion-list-header>
+          <ion-label>Tốc độ cuộn (Scroll Speed)</ion-label>
+          <ion-note slot="end">{{ scrollSensitivity | number:'1.1-1' }}x</ion-note>
+        </ion-list-header>
+        <ion-item lines="none">
+          <ion-range min="0.1" max="2" step="0.1" [(ngModel)]="scrollSensitivity" color="secondary">
+            <ion-icon slot="start" size="small" name="walk-outline"></ion-icon>
+            <ion-icon slot="end" name="airplane-outline"></ion-icon>
+          </ion-range>
+        </ion-item>
+      </div>
+    </div>
+
+
+    <!-- Touchpad -->
+    <div class="touchpad"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+      <div class="instructions" *ngIf="!connected">
+        <ion-icon name="wifi" size="large"></ion-icon>
+        <p>Kết nối tới PC để bắt đầu</p>
+      </div>
+      <div class="status" *ngIf="connected">
+        <p>Touchpad V6</p>
+        <small>Bàn phím đã được tối ưu cho iPhone</small>
+      </div>
+
+      <!-- Nút Bàn phím nổi trên Touchpad -->
+      <div class="fab-keyboard" (click)="openKeyboard()" (touchstart)="$event.stopPropagation(); openKeyboard()" *ngIf="connected">
+        <ion-icon name="keypad-outline"></ion-icon>
+      </div>
+    </div>
+
+
+    <!-- Nút Click -->
+    <div class="click-buttons" *ngIf="connected">
+      <div class="btn left" 
+           (touchstart)="onButtonDown('left')" (touchend)="onButtonUp('left')"
+           (mousedown)="onButtonDown('left')" (mouseup)="onButtonUp('left')">L</div>
+      <div class="btn right" 
+           (touchstart)="onButtonDown('right')" (touchend)="onButtonUp('right')"
+           (mousedown)="onButtonDown('right')" (mouseup)="onButtonUp('right')">R</div>
+    </div>
+  </div>
+</ion-content>

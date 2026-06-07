@@ -1,0 +1,18 @@
+# AI & Agent CLI Tools
+.gemini/
+.antigravitycli/
+.aevum/
+
+# Python (Server)
+pc-server-py/venv/
+pc-server-py/www/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS & Editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
