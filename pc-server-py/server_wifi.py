@@ -2,9 +2,27 @@ import socketio
 import pyautogui
 import socket
 import os
+import sys
 import qrcode
+import secrets
+from urllib.parse import parse_qs
 from aiohttp import web
 import aiohttp_cors
+
+# Tạo một key bảo mật ngẫu nhiên cho mỗi phiên chạy
+SECRET_KEY = secrets.token_urlsafe(16)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+www_dir = resource_path('www')
 
 # Cấu hình PyAutoGUI
 pyautogui.FAILSAFE = False
@@ -25,7 +43,15 @@ cors = aiohttp_cors.setup(app, defaults={
 
 @sio.event
 async def connect(sid, environ):
-    print(f"Client connected: {sid}")
+    query_string = environ.get('QUERY_STRING', '')
+    params = parse_qs(query_string)
+    client_key = params.get('key', [''])[0]
+    
+    if client_key != SECRET_KEY:
+        print(f"[{sid}] Connection rejected: Invalid Key!")
+        raise socketio.exceptions.ConnectionRefusedError('Authentication failed')
+        
+    print(f"Client connected successfully: {sid}")
 
 @sio.event
 async def disconnect(sid):
@@ -73,9 +99,9 @@ async def key_press(sid, data):
             pass
 
 # Static files (Angular build)
-if os.path.exists('www'):
+if os.path.exists(www_dir):
     async def serve_index(request):
-        return web.FileResponse('www/index.html')
+        return web.FileResponse(os.path.join(www_dir, 'index.html'))
     
     async def static_handler(request):
         # Lấy đường dẫn file từ request
@@ -83,7 +109,7 @@ if os.path.exists('www'):
         if not filename:
             return await serve_index(request)
             
-        file_path = os.path.join('www', filename)
+        file_path = os.path.join(www_dir, filename)
         
         # Nếu là file thật thì serve file đó
         if os.path.isfile(file_path):
@@ -112,13 +138,14 @@ def get_ip():
     return ip
 
 def display_qr(ip):
-    url = f"http://{ip}:5000"
+    url = f"http://{ip}:5000?key={SECRET_KEY}"
     print("\n" + "="*40)
-    print(f" MOBILE CONTROL SERVER V6")
+    print(f" LEX SERVER V6 - SECURED")
     print("="*40)
     print(f"Server IP: {ip}")
+    print(f"Secret Key: {SECRET_KEY}")
     print("-" * 40)
-    print("Scan QR code to connect (or enter IP manually):")
+    print("Scan QR code from Lex App to connect:")
     
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(url)

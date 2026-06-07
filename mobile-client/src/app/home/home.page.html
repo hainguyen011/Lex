@@ -25,9 +25,21 @@
 
     <!-- Cấu hình IP -->
     <div class="connection-setup" *ngIf="!connected">
+      <div id="qr-reader" style="width: 100%; margin-bottom: 10px;" [hidden]="!isScanning"></div>
+      
+      <ion-button expand="block" color="secondary" (click)="toggleScanner()" class="ion-margin-bottom">
+        <ion-icon slot="start" name="qr-code-outline"></ion-icon>
+        {{ isScanning ? 'Hủy quét' : 'Quét mã QR Server' }}
+      </ion-button>
+
       <ion-item lines="inset">
         <ion-label position="stacked">PC Server IP Address</ion-label>
         <ion-input [(ngModel)]="serverIp" placeholder="e.g. 192.168.1.5"></ion-input>
+      </ion-item>
+      
+      <ion-item lines="inset">
+        <ion-label position="stacked">Secret Key (bắt buộc)</ion-label>
+        <ion-input [(ngModel)]="secretKey" placeholder="Nhập key hoặc quét QR" type="password"></ion-input>
       </ion-item>
 
       <div class="advanced-settings">

@@ -1,6 +1,7 @@
 import { Component, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 import { io, Socket } from 'socket.io-client';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 @Component({
   selector: 'app-home',
@@ -13,6 +14,9 @@ export class HomePage implements OnDestroy {
 
   connected = false;
   serverIp = ''; 
+  secretKey = '';
+  isScanning = false;
+  private scanner: Html5QrcodeScanner | null = null;
   private socket: Socket | null = null;
   
   private lastX = 0;
@@ -38,6 +42,9 @@ export class HomePage implements OnDestroy {
     const savedIp = localStorage.getItem('server_ip');
     if (savedIp) this.serverIp = savedIp;
 
+    const savedKey = localStorage.getItem('secret_key');
+    if (savedKey) this.secretKey = savedKey;
+
     const savedSens = localStorage.getItem('sensitivity');
     if (savedSens) this.sensitivity = parseFloat(savedSens);
 
@@ -48,6 +55,34 @@ export class HomePage implements OnDestroy {
   saveSettings() {
     localStorage.setItem('sensitivity', this.sensitivity.toString());
     localStorage.setItem('scroll_sensitivity', this.scrollSensitivity.toString());
+    localStorage.setItem('server_ip', this.serverIp);
+    localStorage.setItem('secret_key', this.secretKey);
+  }
+
+  toggleScanner() {
+    this.isScanning = !this.isScanning;
+    if (this.isScanning) {
+      setTimeout(() => {
+        this.scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+        this.scanner.render((decodedText: string) => {
+          // Xử lý text quét được (URL)
+          try {
+            const url = new URL(decodedText);
+            this.serverIp = url.hostname;
+            this.secretKey = url.searchParams.get('key') || '';
+            this.toggleScanner(); // Tắt quét
+            this.showToast('Đã quét thành công!');
+          } catch (e) {
+            this.showToast('Mã QR không hợp lệ!');
+          }
+        }, undefined);
+      }, 100);
+    } else {
+      if (this.scanner) {
+        this.scanner.clear().catch(console.error);
+        this.scanner = null;
+      }
+    }
   }
 
   toggleConnect() { 
@@ -61,12 +96,19 @@ export class HomePage implements OnDestroy {
 
 
   async connect() {
-    if (!this.serverIp) return this.showToast('Nhập IP đã Anh ơi!');
-    localStorage.setItem('server_ip', this.serverIp);
+    if (!this.serverIp || !this.secretKey) return this.showToast('Nhập IP và Secret Key nha Anh ơi!');
     const serverUrl = `http://${this.serverIp}:5000`;
-    this.socket = io(serverUrl, { transports: ['websocket'], timeout: 5000 });
+    
+    // Gửi secretKey trong query params
+    this.socket = io(serverUrl, { 
+      transports: ['websocket'], 
+      timeout: 5000,
+      query: { key: this.secretKey }
+    });
+    
     this.socket.on('connect', () => { this.connected = true; this.showToast('Đã kết nối! 🚀'); });
-    this.socket.on('disconnect', () => this.connected = false);
+    this.socket.on('disconnect', () => { this.connected = false; this.showToast('Đã ngắt kết nối!'); });
+    this.socket.on('connect_error', (err) => { this.showToast('Lỗi: Sai Key hoặc IP!'); this.disconnect(); });
   }
 
   disconnect() {
