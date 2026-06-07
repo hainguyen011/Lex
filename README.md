@@ -1,6 +1,6 @@
-# MobileControl
+# Lex
 
-MobileControl is a client-server application designed to provide remote control and monitoring capabilities. The system is composed of a mobile frontend and a backend server running on a PC.
+Lex is a client-server application designed to provide remote control and monitoring capabilities. The system is composed of a mobile frontend and a backend server running on a PC.
 
 ## Architecture
 

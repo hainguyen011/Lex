@@ -1,5 +1,5 @@
 {
-  "name": "mobile-client",
+  "name": "lex",
   "integrations": {
     "capacitor": {}
   },

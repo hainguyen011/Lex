@@ -97,7 +97,7 @@ if os.path.exists('www'):
     app.router.add_get('/{filename:.*}', static_handler)
 else:
     async def index(request):
-        return web.Response(text="MobileControl Server is running! (No UI found in www/)", content_type='text/html')
+        return web.Response(text="Lex Server is running! (No UI found in www/)", content_type='text/html')
     app.router.add_get('/', index)
 
 def get_ip():
