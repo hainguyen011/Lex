@@ -14,7 +14,7 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "es2022",
     "module": "es2020",
@@ -22,6 +22,7 @@
       "es2018",
       "dom"
     ],
+    "types": [],
     "skipLibCheck": true,
     "useDefineForClassFields": false
   },

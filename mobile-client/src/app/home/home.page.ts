@@ -1,7 +1,18 @@
-import { Component, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnDestroy, ViewChild, ElementRef, OnInit, NgZone, ChangeDetectorRef, HostListener } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 import { io, Socket } from 'socket.io-client';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+
+console.log("=== LEX HOME PAGE FILE LOADED ===");
+
+interface Profile {
+  id: string;
+  name: string;
+  isKeyboardMode: boolean;
+  useJoystick: boolean;
+  actionButtonsCount: 4 | 6;
+  mappings: { [btn: string]: string };
+}
 
 @Component({
   selector: 'app-home',
@@ -9,20 +20,49 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
   styleUrls: ['home.page.scss'],
   standalone: false,
 })
-export class HomePage implements OnDestroy {
-  @ViewChild('hiddenInput') hiddenInput!: ElementRef<HTMLTextAreaElement>;
+export class HomePage implements OnInit, OnDestroy {
+  @ViewChild('keyboardInput') keyboardInput!: ElementRef<HTMLInputElement>;
 
   connected = false;
-  serverIp = ''; 
+  playerIndex: number | null = null;
+  serverIp = '';
   secretKey = '';
   isScanning = false;
   private scanner: Html5QrcodeScanner | null = null;
   private socket: Socket | null = null;
-  
+
+  appMode: 'overview' | 'touchpad' | 'gamepad' = 'overview';
+
+  // Profiles
+  profiles: Profile[] = [];
+  currentProfileId: string = 'default';
+  isSettingsOpen = false;
+
+  readonly defaultMappings: { [key: string]: string } = {
+    'A': 'space', 'B': 'shift', 'X': 'r', 'Y': 'e',
+    'C': 'f', 'Z': 'g',
+    'UP': 'w', 'DOWN': 's', 'LEFT': 'a', 'RIGHT': 'd',
+    'L1': 'q', 'R1': 'e', 'L2': '1', 'R2': '2',
+    'START': 'esc', 'SELECT': 'tab'
+  };
+
+  // Gamepad state
+  joyX = 0;
+  joyY = 0;
+  private joyRadius = 60; // 120px / 2
+  private joyCenterX = 0;
+  private joyCenterY = 0;
+  private isJoyActive = false;
+  private joyTouchId: number | null = null;
+  private activeJoyKeys = new Set<string>();
+  private joystickStickEl: HTMLElement | null = null;
+  private pressedButtons = new Set<string>();
+  @ViewChild('joystickBase') joystickBase!: ElementRef<HTMLDivElement>;
+
   private lastX = 0;
   private lastY = 0;
   private lastSendTime = 0;
-  private readonly THROTTLE_MS = 5; 
+  private readonly THROTTLE_MS = 8; // Tần số gửi tối ưu ~125Hz qua WiFi tránh lag-spike
 
   // Cấu hình độ nhạy động
   sensitivity = 2.2;
@@ -38,7 +78,12 @@ export class HomePage implements OnDestroy {
   // Hằng số cho bộ gõ mới
   private readonly KEY_HINT = "  "; // 2 dấu cách
 
-  constructor(private toastCtrl: ToastController) {
+  isKeyboardActive = false;
+  typedText = '';
+  lastTypedText = '';
+
+  constructor(private toastCtrl: ToastController, private zone: NgZone, private cdr: ChangeDetectorRef) {
+    console.log("=== HomePage Constructor ===");
     const savedIp = localStorage.getItem('server_ip');
     if (savedIp) this.serverIp = savedIp;
 
@@ -52,6 +97,137 @@ export class HomePage implements OnDestroy {
     if (savedScrollSens) this.scrollSensitivity = parseFloat(savedScrollSens);
   }
 
+  ngOnInit() {
+    console.log("=== HomePage ngOnInit ===");
+    this.loadProfiles();
+    this.setupGlobalTouchListeners();
+    setTimeout(() => {
+      this.checkUrlParams();
+    }, 300);
+  }
+
+  checkUrlParams() {
+    try {
+      const currentUrl = window.location.href;
+      console.log("Current Browser URL:", currentUrl);
+      
+      // 1. Tìm key bằng Regex trong toàn bộ URL (hỗ trợ cả URL thường và Hash routing)
+      const keyMatch = currentUrl.match(/[?&]key=([^&]+)/);
+      if (keyMatch) {
+        let key = keyMatch[1];
+        try {
+          key = decodeURIComponent(key);
+        } catch (e) {
+          key = keyMatch[1];
+        }
+        key = key.replace(/^["']|["']$/g, '');
+        this.secretKey = key;
+        localStorage.setItem('secret_key', key);
+      }
+      
+      // 2. Lấy IP từ hostname của trình duyệt (tránh đè mất IP thật bằng localhost)
+      const hostname = window.location.hostname;
+      if (hostname) {
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+        if (!isLocal || !this.serverIp) {
+          this.serverIp = hostname;
+          localStorage.setItem('server_ip', hostname);
+        }
+
+        // 3. Nếu đang mở qua localhost/127.0.0.1, gọi API lấy IP mạng LAN thực tế của PC Server
+        if (isLocal) {
+          fetch('/api/ip')
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.ip && data.ip !== '127.0.0.1') {
+                this.zone.run(() => {
+                  this.serverIp = data.ip;
+                  localStorage.setItem('server_ip', data.ip);
+                  this.cdr.detectChanges();
+                });
+              }
+            })
+            .catch(err => console.error("Error fetching LAN IP from server:", err));
+        }
+      }
+      
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error("Error checking URL params:", e);
+    }
+  }
+
+  // --- Profiles Logic ---
+  loadProfiles() {
+    const saved = localStorage.getItem('gamepad_profiles');
+    if (saved) {
+      this.profiles = JSON.parse(saved);
+      this.profiles.forEach(p => {
+        if (p.useJoystick === undefined) p.useJoystick = true;
+        if (p.actionButtonsCount === undefined) p.actionButtonsCount = 4;
+        if (p.mappings['C'] === undefined) p.mappings['C'] = 'f';
+        if (p.mappings['Z'] === undefined) p.mappings['Z'] = 'g';
+      });
+    } else {
+      this.profiles = [
+        { id: 'default', name: 'Mặc định (Xbox)', isKeyboardMode: false, useJoystick: true, actionButtonsCount: 4, mappings: { ...this.defaultMappings } },
+        { id: 'keyboard_1', name: 'Bàn phím cơ bản', isKeyboardMode: true, useJoystick: false, actionButtonsCount: 4, mappings: { ...this.defaultMappings } }
+      ];
+    }
+    const savedId = localStorage.getItem('current_profile_id');
+    if (savedId && this.profiles.find(p => p.id === savedId)) {
+      this.currentProfileId = savedId;
+    } else {
+      this.currentProfileId = this.profiles[0].id;
+    }
+  }
+
+  saveProfiles() {
+    localStorage.setItem('gamepad_profiles', JSON.stringify(this.profiles));
+    localStorage.setItem('current_profile_id', this.currentProfileId);
+  }
+
+  addProfile() {
+    const newId = 'prof_' + Date.now();
+    this.profiles.push({
+      id: newId,
+      name: 'Hồ sơ mới',
+      isKeyboardMode: true,
+      useJoystick: true,
+      actionButtonsCount: 4,
+      mappings: { ...this.defaultMappings }
+    });
+    this.currentProfileId = newId;
+    this.saveProfiles();
+  }
+
+  toggleLeftControl() {
+    const prof = this.currentProfile;
+    if (prof) {
+      prof.useJoystick = !prof.useJoystick;
+      this.saveProfiles();
+      this.cdr.detectChanges();
+    }
+  }
+
+  deleteProfile(id: string) {
+    if (this.profiles.length <= 1) return;
+    this.profiles = this.profiles.filter(p => p.id !== id);
+    if (this.currentProfileId === id) this.currentProfileId = this.profiles[0].id;
+    this.saveProfiles();
+  }
+
+  onProfileChange() {
+    this.saveProfiles();
+  }
+
+  get currentProfile(): Profile | undefined {
+    return this.profiles.find(p => p.id === this.currentProfileId);
+  }
+
+  openSettings() { this.isSettingsOpen = true; }
+  closeSettings() { this.isSettingsOpen = false; this.saveProfiles(); }
+
   saveSettings() {
     localStorage.setItem('sensitivity', this.sensitivity.toString());
     localStorage.setItem('scroll_sensitivity', this.scrollSensitivity.toString());
@@ -63,29 +239,88 @@ export class HomePage implements OnDestroy {
     this.isScanning = !this.isScanning;
     if (this.isScanning) {
       setTimeout(() => {
-        this.scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-        this.scanner.render((decodedText: string) => {
-          // Xử lý text quét được (URL)
-          try {
-            const url = new URL(decodedText);
-            this.serverIp = url.hostname;
-            this.secretKey = url.searchParams.get('key') || '';
-            this.toggleScanner(); // Tắt quét
-            this.showToast('Đã quét thành công!');
-          } catch (e) {
-            this.showToast('Mã QR không hợp lệ!');
-          }
-        }, undefined);
-      }, 100);
+        try {
+          const scannerInstance = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+          this.scanner = scannerInstance;
+          scannerInstance.render((decodedText: string) => {
+            // Xử lý text quét được (URL)
+            try {
+              const cleanText = decodedText.trim();
+              console.log("Scanned QR Text:", cleanText);
+
+              let ip = '';
+              let key = '';
+
+              // 1. Tìm Secret Key bằng Regex
+              const keyMatch = cleanText.match(/[?&]key=([^&]+)/);
+              if (keyMatch) {
+                try {
+                  // Giải mã URL encode (ví dụ: %22 -> ")
+                  key = decodeURIComponent(keyMatch[1]);
+                } catch (e) {
+                  key = keyMatch[1];
+                }
+                // Loại bỏ dấu ngoặc kép hoặc ngoặc đơn bọc ngoài nếu có (ví dụ: "123" -> 123)
+                key = key.replace(/^["']|["']$/g, '');
+              }
+
+              // 2. Tìm IP/Host bằng Regex (loại bỏ http/https, port, path)
+              const hostMatch = cleanText.match(/(?:https?:\/\/)?([^:/?#\s]+)/);
+              if (hostMatch) {
+                ip = hostMatch[1];
+                ip = ip.replace(/^["']|["']$/g, '');
+              }
+
+              console.log("Parsed result - IP:", ip, "Key:", key);
+
+              if (!ip) {
+                throw new Error('Could not parse IP from QR');
+              }
+
+              this.zone.run(() => {
+                this.serverIp = ip;
+                this.secretKey = key;
+
+                // Đồng bộ ngay lập tức vào localStorage
+                localStorage.setItem('server_ip', ip);
+                localStorage.setItem('secret_key', key);
+
+                this.toggleScanner(); // Tắt quét
+                this.cdr.detectChanges(); // Ép buộc cập nhật giao diện
+                this.showToast(`Đã quét thành công: ${ip}`);
+              });
+            } catch (e) {
+              console.error("QR parse error:", e);
+              this.zone.run(() => {
+                this.showToast('Mã QR không đúng định dạng!');
+              });
+            }
+          }, (errorMessage: string) => {
+            // Bỏ qua error callback liên tục khi quét để tránh tràn console log
+          });
+        } catch (err) {
+          console.error("Failed to initialize scanner:", err);
+          this.zone.run(() => {
+            this.showToast("Lỗi khởi tạo Camera! Vui lòng kiểm tra quyền truy cập.");
+            this.isScanning = false;
+          });
+        }
+      }, 150);
     } else {
       if (this.scanner) {
-        this.scanner.clear().catch(console.error);
+        const currentScanner = this.scanner;
         this.scanner = null;
+        // Defer clearing to avoid race conditions inside html5-qrcode
+        setTimeout(() => {
+          currentScanner.clear().catch((err) => {
+            console.error("Error clearing scanner:", err);
+          });
+        }, 100);
       }
     }
   }
 
-  toggleConnect() { 
+  toggleConnect() {
     if (!this.connected) {
       this.saveSettings();
       this.connect();
@@ -98,61 +333,210 @@ export class HomePage implements OnDestroy {
   async connect() {
     if (!this.serverIp || !this.secretKey) return this.showToast('Nhập IP và Secret Key nha Anh ơi!');
     const serverUrl = `http://${this.serverIp}:5000`;
-    
+
     // Gửi secretKey trong query params
-    this.socket = io(serverUrl, { 
-      transports: ['websocket'], 
+    this.socket = io(serverUrl, {
+      transports: ['websocket'],
       timeout: 5000,
       query: { key: this.secretKey }
     });
-    
-    this.socket.on('connect', () => { this.connected = true; this.showToast('Đã kết nối! 🚀'); });
-    this.socket.on('disconnect', () => { this.connected = false; this.showToast('Đã ngắt kết nối!'); });
-    this.socket.on('connect_error', (err) => { this.showToast('Lỗi: Sai Key hoặc IP!'); this.disconnect(); });
+
+    this.socket.on('connect', () => { 
+      this.zone.run(() => {
+        this.connected = true; 
+        this.showToast('Đã kết nối! 🚀'); 
+      });
+    });
+    this.socket.on('player_assign', (data: any) => {
+      this.zone.run(() => {
+        this.playerIndex = data.player_index;
+        this.showToast(`Bạn được gán làm Player ${data.player_index + 1}! 🎮`);
+        this.cdr.detectChanges();
+      });
+    });
+    this.socket.on('disconnect', () => { 
+      this.zone.run(() => {
+        this.connected = false; 
+        this.playerIndex = null;
+        this.showToast('Đã ngắt kết nối!'); 
+        if (this.appMode === 'gamepad') {
+          this.setAppMode('overview');
+        }
+      });
+    });
+    this.socket.on('connect_error', (err) => { 
+      this.zone.run(() => {
+        this.showToast('Lỗi: Sai Key hoặc IP!'); 
+        this.disconnect(); 
+      });
+    });
   }
 
   disconnect() {
     if (this.socket) { this.socket.disconnect(); this.socket = null; }
     this.connected = false;
+    this.playerIndex = null;
+    if (this.appMode === 'gamepad') {
+      this.setAppMode('overview');
+    }
   }
 
-  // --- Logic Bàn phím V6 (Phương pháp Hai Dấu Cách) ---
+  async setAppMode(mode: 'overview' | 'touchpad' | 'gamepad') {
+    const prevMode = this.appMode;
+    this.appMode = mode;
+    if (mode === 'gamepad') {
+      await this.enterFullscreen();
+    } else {
+      if (prevMode === 'gamepad') {
+        // Nhả tất cả các nút đang nhấn trên server tránh bị kẹt phím
+        for (const btn of this.pressedButtons) {
+          this.onGpadUp(btn);
+        }
+        this.pressedButtons.clear();
+        
+        if (this.isJoyActive) {
+          this.onJoyEnd();
+        }
+      }
+      await this.exitFullscreen();
+    }
+    this.cdr.detectChanges();
+  }
+
+  async enterFullscreen() {
+    try {
+      const docEl = document.documentElement as any;
+      if (docEl.requestFullscreen) {
+        await docEl.requestFullscreen();
+      } else if (docEl.webkitRequestFullscreen) {
+        await docEl.webkitRequestFullscreen();
+      } else if (docEl.msRequestFullscreen) {
+        await docEl.msRequestFullscreen();
+      }
+
+      // Khóa màn hình xoay ngang (Landscape) nếu thiết bị hỗ trợ
+      if (window.screen && (window.screen as any).orientation && (window.screen as any).orientation.lock) {
+        await (window.screen as any).orientation.lock('landscape').catch((err: any) => {
+          console.warn('Orientation lock was rejected or not supported:', err);
+        });
+      }
+    } catch (e) {
+      console.warn('Không thể kích hoạt Fullscreen:', e);
+    }
+  }
+
+  async exitFullscreen() {
+    try {
+      const doc = document as any;
+      const isFullscreen = !!(
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.msFullscreenElement
+      );
+      if (isFullscreen) {
+        if (doc.exitFullscreen) {
+          await doc.exitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen();
+        }
+      }
+
+      // Mở khóa màn hình
+      if (window.screen && (window.screen as any).orientation && (window.screen as any).orientation.unlock) {
+        (window.screen as any).orientation.unlock();
+      }
+    } catch (e) {
+      console.warn('Không thể thoát Fullscreen:', e);
+    }
+  }
+
+  @HostListener('document:fullscreenchange', ['$event'])
+  @HostListener('document:webkitfullscreenchange', ['$event'])
+  @HostListener('document:msfullscreenchange', ['$event'])
+  onFullscreenChange() {
+    const isFullscreen = !!(
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).msFullscreenElement
+    );
+    if (!isFullscreen && this.appMode === 'gamepad') {
+      this.zone.run(() => {
+        this.appMode = 'touchpad';
+        this.cdr.detectChanges();
+      });
+    }
+  }
+
+  // --- Logic Bàn phím gõ hiển thị (Input Bar Vercel) ---
   openKeyboard() {
-    const input = this.hiddenInput.nativeElement;
-    input.value = this.KEY_HINT;
-    input.focus();
-    // Đặt con trỏ ở cuối
-    input.setSelectionRange(2, 2);
+    this.isKeyboardActive = true;
+    this.typedText = '';
+    this.lastTypedText = '';
+    setTimeout(() => {
+      if (this.keyboardInput) {
+        this.keyboardInput.nativeElement.focus();
+      }
+    }, 120);
   }
 
-  onKeyInput(event: any) {
+  closeKeyboard() {
+    this.isKeyboardActive = false;
+    this.typedText = '';
+    this.lastTypedText = '';
+  }
+
+  clearKeyboardText() {
+    this.typedText = '';
+    this.lastTypedText = '';
+    if (this.keyboardInput) {
+      this.keyboardInput.nativeElement.focus();
+    }
+  }
+
+  onKeyboardEnter() {
+    if (this.socket && this.connected) {
+      this.socket.emit('key_press', { key: 'Enter' });
+    }
+    // Reset lại ô nhập liệu trên mobile sau khi gửi Enter
+    this.typedText = '';
+    this.lastTypedText = '';
+  }
+
+  onKeyboardInputChange(event: any) {
     if (!this.socket || !this.connected) return;
+    const currentText = this.typedText;
+    const oldText = this.lastTypedText;
 
-    const input = this.hiddenInput.nativeElement;
-    const currentValue = input.value;
+    if (currentText === oldText) return;
 
-    // 1. Nếu giá trị ngắn hơn 2 -> Anh vừa nhấn Backspace
-    if (currentValue.length < 2) {
-      const diff = 2 - currentValue.length;
+    // 1. Nếu dài hơn -> người dùng gõ thêm hoặc paste chữ
+    if (currentText.length > oldText.length) {
+      if (currentText.startsWith(oldText)) {
+        const added = currentText.substring(oldText.length);
+        for (let char of added) {
+          if (char === '\n') {
+            this.socket.emit('key_press', { key: 'Enter' });
+          } else {
+            this.socket.emit('key_press', { key: char });
+          }
+        }
+      } else {
+        // Dự phòng khi con trỏ nhảy hoặc paste thay thế
+        const added = currentText.substring(oldText.length);
+        this.socket.emit('key_press', { key: added });
+      }
+    } 
+    // 2. Nếu ngắn hơn -> người dùng xóa chữ
+    else if (currentText.length < oldText.length) {
+      const diff = oldText.length - currentText.length;
       for (let i = 0; i < diff; i++) {
         this.socket.emit('key_press', { key: 'Backspace' });
       }
-    } 
-
-    // 2. Nếu dài hơn 2 -> Anh vừa gõ chữ hoặc nhấn Enter
-    else if (currentValue.length > 2) {
-      const newChar = currentValue.substring(2);
-      
-      if (newChar === "\n") {
-        this.socket.emit('key_press', { key: 'Enter' });
-      } else {
-        this.socket.emit('key_press', { key: newChar });
-      }
     }
 
-    // Luôn reset về trạng thái 2 dấu cách
-    input.value = this.KEY_HINT;
-    input.setSelectionRange(2, 2);
+    this.lastTypedText = currentText;
   }
 
   // --- Logic Touchpad ---
@@ -207,7 +591,240 @@ export class HomePage implements OnDestroy {
   onButtonDown(button: 'left' | 'right') { if (this.connected && this.socket) this.socket.emit('mouse_down', { button }); }
   onButtonUp(button: 'left' | 'right') { if (this.connected && this.socket) this.socket.emit('mouse_up', { button }); }
 
-  private async showToast(message: string) {
+  private safePreventDefault(event: any) {
+    if (event && event.cancelable) {
+      try {
+        event.preventDefault();
+      } catch (e) {
+        // Nuốt lỗi passive event listener trên thiết bị di động
+      }
+    }
+  }
+
+  // --- Gamepad Logic ---
+  onGpadDown(btn: string, event?: TouchEvent) {
+    if (!this.connected || !this.socket) return;
+    const prof = this.currentProfile;
+    if (!prof) return;
+
+    if (prof.isKeyboardMode) {
+      const key = prof.mappings[btn];
+      if (key) this.socket.emit('gamepad_key_down', { key });
+    } else {
+      if (btn === 'L2' || btn === 'R2') {
+        this.socket.emit('gamepad_trigger', { trigger: btn, value: 1.0 });
+      } else {
+        this.socket.emit('gamepad_button_down', { button: btn });
+      }
+    }
+  }
+
+  onGpadUp(btn: string, event?: TouchEvent) {
+    if (!this.connected || !this.socket) return;
+    const prof = this.currentProfile;
+    if (!prof) return;
+
+    if (prof.isKeyboardMode) {
+      const key = prof.mappings[btn];
+      if (key) this.socket.emit('gamepad_key_up', { key });
+    } else {
+      if (btn === 'L2' || btn === 'R2') {
+        this.socket.emit('gamepad_trigger', { trigger: btn, value: 0.0 });
+      } else {
+        this.socket.emit('gamepad_button_up', { button: btn });
+      }
+    }
+  }
+
+  setupGlobalTouchListeners() {
+    this.zone.runOutsideAngular(() => {
+      // 1. Touch start
+      window.addEventListener('touchstart', (e: TouchEvent) => {
+        if (this.appMode !== 'gamepad') return;
+        this.processTouches(e);
+      }, { passive: false });
+
+      // 2. Touch move
+      window.addEventListener('touchmove', (e: TouchEvent) => {
+        if (this.appMode !== 'gamepad') return;
+        this.processTouches(e);
+      }, { passive: false });
+
+      // 3. Touch end / cancel
+      const handleTouchEnd = (e: TouchEvent) => {
+        if (this.appMode !== 'gamepad') return;
+        this.processTouches(e);
+      };
+      window.addEventListener('touchend', handleTouchEnd, { passive: false });
+      window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    });
+  }
+
+  private processTouches(e: TouchEvent) {
+    // 1. Phát hiện chạm trên Joystick Base để kích hoạt kéo thả khi touchstart
+    if (e.type === 'touchstart') {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        const target = touch.target as HTMLElement;
+        const joyBase = target.closest('.joystick-base');
+        if (joyBase && !this.isJoyActive) {
+          if (e.cancelable) e.preventDefault();
+          this.onJoyStart(touch, joyBase as HTMLElement);
+        }
+      }
+    }
+
+    // 2. Phát hiện Joystick kết thúc khi touchend/touchcancel
+    if (e.type === 'touchend' || e.type === 'touchcancel') {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        if (this.isJoyActive && touch.identifier === this.joyTouchId) {
+          if (e.cancelable) e.preventDefault();
+          this.onJoyEnd();
+        }
+      }
+    }
+
+    // 3. Cập nhật vị trí Joystick
+    if (this.isJoyActive) {
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        if (touch.identifier === this.joyTouchId) {
+          if (e.cancelable) e.preventDefault();
+          this.updateJoy(touch.clientX, touch.clientY);
+          break;
+        }
+      }
+    }
+
+    // 4. Xử lý D-pad và Action Buttons bằng cơ chế Hit-testing thông minh (hỗ trợ Multi-touch & Sliding)
+    const currentlyPressed = new Set<string>();
+    for (let i = 0; i < e.touches.length; i++) {
+      const touch = e.touches[i];
+      
+      // Bỏ qua ngón tay đang kéo Joystick
+      if (this.isJoyActive && touch.identifier === this.joyTouchId) {
+        continue;
+      }
+
+      // Xác định element nằm dưới ngón tay chạm
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const btnEl = el ? el.closest('[data-btn]') : null;
+      if (btnEl) {
+        const btnName = btnEl.getAttribute('data-btn');
+        if (btnName) {
+          currentlyPressed.add(btnName);
+        }
+      }
+    }
+
+    // Gửi tín hiệu nhấn phím mới
+    for (const btn of currentlyPressed) {
+      if (!this.pressedButtons.has(btn)) {
+        this.onGpadDown(btn);
+      }
+    }
+
+    // Gửi tín hiệu nhả phím cũ
+    for (const btn of this.pressedButtons) {
+      if (!currentlyPressed.has(btn)) {
+        this.onGpadUp(btn);
+      }
+    }
+
+    this.pressedButtons = currentlyPressed;
+  }
+
+  onJoyStart(touch: Touch, joyBase: HTMLElement) {
+    if (this.isJoyActive) return;
+    this.joyTouchId = touch.identifier;
+    this.isJoyActive = true;
+    this.joystickStickEl = joyBase.querySelector('.joystick-stick') as HTMLElement;
+
+    const rect = joyBase.getBoundingClientRect();
+    const currentRadius = rect.width / 2;
+    this.joyRadius = currentRadius;
+    this.joyCenterX = rect.left + currentRadius;
+    this.joyCenterY = rect.top + currentRadius;
+
+    this.updateJoy(touch.clientX, touch.clientY);
+  }
+
+  onJoyEnd() {
+    this.isJoyActive = false;
+    this.joyTouchId = null;
+    this.joyX = 0;
+    this.joyY = 0;
+
+    if (this.joystickStickEl) {
+      this.joystickStickEl.style.transform = 'translate(0px, 0px)';
+      this.joystickStickEl = null;
+    }
+
+    const prof = this.currentProfile;
+    if (prof && prof.isKeyboardMode) {
+      for (const k of this.activeJoyKeys) {
+        this.socket?.emit('gamepad_key_up', { key: k });
+      }
+      this.activeJoyKeys.clear();
+    } else if (this.connected && this.socket) {
+      this.socket.emit('gamepad_joystick', { stick: 'left', x: 0, y: 0 });
+    }
+  }
+
+  private updateJoy(clientX: number, clientY: number) {
+    let dx = clientX - this.joyCenterX;
+    let dy = clientY - this.joyCenterY;
+
+    // Bù trừ tọa độ khi giao diện bị xoay 90 độ (CSS rotate) trên màn hình dọc
+    if (window.innerWidth < window.innerHeight && this.appMode === 'gamepad') {
+      const tempX = dx;
+      const tempY = dy;
+      dx = tempY;
+      dy = -tempX;
+    }
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance > this.joyRadius) {
+      dx = (dx / distance) * this.joyRadius;
+      dy = (dy / distance) * this.joyRadius;
+    }
+
+    this.joyX = dx;
+    this.joyY = dy;
+
+    // Cập nhật DOM trực tiếp để tối ưu hóa hiệu năng
+    if (this.joystickStickEl) {
+      this.joystickStickEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+
+    let normX = dx / this.joyRadius;
+    let normY = -(dy / this.joyRadius);
+
+    const prof = this.currentProfile;
+    if (prof && prof.isKeyboardMode && this.connected && this.socket) {
+      const newActive = new Set<string>();
+      if (normY > 0.3 && prof.mappings['UP']) newActive.add(prof.mappings['UP']);
+      if (normY < -0.3 && prof.mappings['DOWN']) newActive.add(prof.mappings['DOWN']);
+      if (normX > 0.3 && prof.mappings['RIGHT']) newActive.add(prof.mappings['RIGHT']);
+      if (normX < -0.3 && prof.mappings['LEFT']) newActive.add(prof.mappings['LEFT']);
+
+      for (const k of this.activeJoyKeys) {
+        if (!newActive.has(k)) this.socket.emit('gamepad_key_up', { key: k });
+      }
+      for (const k of newActive) {
+        if (!this.activeJoyKeys.has(k)) this.socket.emit('gamepad_key_down', { key: k });
+      }
+      this.activeJoyKeys = newActive;
+    } else {
+      if (Date.now() - this.lastSendTime > this.THROTTLE_MS && this.connected && this.socket) {
+        this.socket.emit('gamepad_joystick', { stick: 'left', x: normX, y: normY });
+        this.lastSendTime = Date.now();
+      }
+    }
+  }
+
+  async showToast(message: string) {
     const toast = await this.toastCtrl.create({ message, duration: 1500, position: 'bottom', color: 'dark' });
     await toast.present();
   }
