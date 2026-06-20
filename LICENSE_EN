@@ -21,3 +21,10 @@ Modifications to the source code are allowed solely for private study or interna
 4. DISCLAIMER OF WARRANTY AND LIABILITY
 ---------------------------------------
 This software is provided "AS IS", without warranty of any kind, express or implied. In no event shall the author be liable for any direct, indirect, incidental, or consequential damages arising out of the use or inability to use the software.
+
+5. SAFETY AND SECURITY COMMITMENT
+---------------------------------
+- The Lex software is designed and programmed solely for the purpose of facilitating remote computer control (touchpad, keyboard, and gamepad emulation).
+- The software commits to not performing any unauthorized exploits, system intrusions, hacking behaviors, or data extraction on the host machine.
+- Lex does not collect, log, or transmit any personal data, passwords, or sensitive information to external servers. All data transmission between the mobile device and the host computer occurs strictly within your local area network (Wi-Fi LAN).
+- Administrator privileges (UAC) requested at startup are used exclusively to allow the software to inject input events into elevated windows (e.g., Task Manager or games with anti-cheat components). This permission is not used for unauthorized privilege escalation or system vulnerability exploits.

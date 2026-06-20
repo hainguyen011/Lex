@@ -7,12 +7,12 @@ Lex is a high-performance, client-server remote control solution engineered to p
 ## Table of Contents
 1. Key Features
 2. System Architecture
-3. System Requirements & Prerequisites
-4. Installation & Setup
-5. Running the Application
-6. Auto-Update and Hot-Reload System
-7. Compilation and Packaging
-8. Technical Configuration & Troubleshooting
+3. System Requirements
+4. Download and Run
+5. Auto-Update and Hot-Reload System
+6. Compilation and Packaging (for Developers)
+7. Technical Configuration & Troubleshooting
+8. Safety & Security Commitment
 9. Authors
 10. License
 
@@ -44,84 +44,32 @@ The Lex ecosystem is split into two independent modules:
 
 ---
 
-## 3. System Requirements & Prerequisites
+## 3. System Requirements
 
-### Host PC (Windows)
-- OS: Windows 10 or Windows 11 (64-bit).
-- Python: Version 3.8 or higher.
-- Driver: ViGEmBus Driver (required only for Gamepad Emulation mode).
-- Privileges: Administrative UAC access.
-
-### Client Build Environment
-- Node.js (v16.x or newer) and NPM.
-- Ionic CLI (installed globally via `npm install -g @ionic/cli`).
+- **Host PC**: Windows 10 or Windows 11 (64-bit).
+- **Gamepad Driver**: ViGEmBus Driver (only required if you wish to use the virtual Xbox 360 controller/gamepad mode).
 
 ---
 
-## 4. Installation & Setup
+## 4. Download and Run
 
-### Setting up the Mobile Client
+### Step 1: Download the Executable
+Download the latest pre-compiled release `lex.exe` from the GitHub Releases section of this repository.
 
-1. Navigate to the client directory:
-   ```bash
-   cd client
-   ```
+### Step 2: Run the Server
+1. Double-click the downloaded `lex.exe` file.
+2. If prompted, grant **Administrator privileges (UAC)**. This allows the server to send inputs to secure windows and full-screen games.
+3. The server terminal will open, showing a QR code and a secret pairing key.
 
-2. Install the Node package dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run the development server locally to test in a browser:
-   ```bash
-   ionic serve
-   ```
-
-### Setting up the PC Server
-
-1. Navigate to the server directory:
-   ```bash
-   cd server
-   ```
-
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   
-   # Activation on Windows
-   venv\Scripts\activate
-   ```
-
-3. Install the required Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Step 3: Connect your Mobile Device
+1. Make sure your PC and mobile device are connected to the same local Wi-Fi network.
+2. Open the browser on your phone and navigate to the IP address shown in the terminal (e.g., `http://192.168.1.15:5000`), or scan the QR code using your phone's camera.
+3. Once the controller interface loads, pair it using the secret key displayed in the terminal.
+4. Select mouse, keyboard, or gamepad mode and start controlling your PC!
 
 ---
 
-## 5. Running the Application
-
-### 1. Launch the Server
-To run the server from source, execute the startup batch script in the root directory:
-```bash
-run.bat
-```
-Alternatively, run the server script directly inside the virtual environment:
-```bash
-cd server
-python server_wifi.py
-```
-Upon startup, the script will prompt for UAC Administrator permissions. Once granted, the server starts on port `5000` and displays a secure connection URL alongside a terminal QR code.
-
-### 2. Connect the Client
-1. Ensure both the PC and the client mobile device are connected to the same local Wi-Fi network.
-2. Open the Lex Mobile App (or access `http://<your-pc-ip>:5000` in your mobile web browser).
-3. Scan the terminal QR code or enter the Server IP and Secret Key manually on the overview dashboard.
-4. Select the desired control mode (Touchpad/Gamepad) to begin remote operation.
-
----
-
-## 6. Auto-Update and Hot-Reload System
+## 5. Auto-Update and Hot-Reload System
 
 Lex features an integrated Git-based update and hot-reload mechanism accessible directly from the client dashboard:
 
@@ -132,7 +80,7 @@ Lex features an integrated Git-based update and hot-reload mechanism accessible 
 
 ---
 
-## 7. Compilation and Packaging
+## 6. Compilation and Packaging (for Developers)
 
 To compile the entire Lex application into a single standalone Windows executable (`lex.exe`), run the packaging script in the root directory:
 ```bash
@@ -146,7 +94,7 @@ This automated batch script will:
 
 ---
 
-## 8. Technical Configuration & Troubleshooting
+## 7. Technical Configuration & Troubleshooting
 
 | Issue / Warning | Potential Cause | Resolution |
 | --- | --- | --- |
@@ -154,6 +102,16 @@ This automated batch script will:
 | Gamepad mode does not emulate controller | Missing kernel-level controller driver | Download and install the ViGEmBus driver. |
 | Keyboard/Mouse inputs blocked in games | Lack of administrative permissions | Right-click the terminal and run as Administrator before launching `run.bat` or `lex.exe`. |
 | PWA "Install App" button is hidden | Chrome insecure origin policy (HTTP) | Access via `localhost` or enable the unsafely-treat-insecure-origin flag in Chrome: `chrome://flags/#unsafely-treat-insecure-origin-as-secure` |
+
+---
+
+## 8. Safety & Security Commitment
+
+Lex is built and distributed with transparency and user safety as absolute priorities:
+- **Intended Purpose Only**: Lex is programmed exclusively to act as a remote input receiver utility (mouse touchpad, keyboard, and virtual controller emulation).
+- **No System Exploitation or Intrusions**: The application does not perform any hacking actions, background system modifications, or unauthorized registry exploits.
+- **Privacy and Data Isolation**: Lex runs entirely within your Local Area Network (Wi-Fi LAN) and does not contain telemetry, tracking, or network-reporting features. No keystrokes, personal details, or system logs are ever collected or sent to external servers.
+- **UAC Privileges Isolation**: The request for UAC Administrator permissions is strictly isolated to the input injection APIs (`SendInput` / Win32 mouse and keyboard events) to allow control over secure windows (such as Task Manager or games with active anti-cheat protections). These permissions are never leveraged for unauthorized privilege escalation or security exploits.
 
 ---
 

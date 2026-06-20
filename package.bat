@@ -14,6 +14,15 @@ echo.
 echo [2/3] Dang kiem tra moi truong Python...
 cd /d "%~dp0server"
 
+if exist "venv" (
+    .\venv\Scripts\python.exe --version >nul 2>&1
+    if errorlevel 1 (
+        echo Moi truong ao venv bi loi duong dan (do doi ten thu muc).
+        echo Dang xoa venv cu de khoi tao lai...
+        rmdir /S /Q "venv"
+    )
+)
+
 if not exist "venv\Scripts\python.exe" (
     echo Khong tim thay venv. Dang khoi dong tao moi truong ao...
     python -m venv venv

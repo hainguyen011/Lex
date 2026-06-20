@@ -2,32 +2,29 @@ LICENSE AGREEMENT (THỎA THUẬN GIẤY PHÉP SỬ DỤNG)
 ==============================================
 
 Dự án: Lex (Low-Latency Remote Control and Monitoring System)
-Bản quyền thuộc về tác giả hainguyen011. Tất cả các quyền được bảo lưu.
+Bản quyền thuộc về tác giả hainguyen011 từ I2FLabs Việt Nam. Tất cả các quyền được bảo lưu.
 
 BẰNG VIỆC SỬ DỤNG PHẦN MỀM NÀY, BẠN ĐỒNG Ý TUÂN THỦ CÁC ĐIỀU KHOẢN DƯỚI ĐÂY. NẾU KHÔNG ĐỒNG Ý, VUI LÒNG KHÔNG TẢI VỀ, CÀI ĐẶT HOẶC SỬ DỤNG PHẦN MỀM.
 
-1. GIỚI HẠN PHẠM VI SỬ DỤNG (SCOPE OF USE)
------------------------------------------
+1. GIỚI HẠN PHẠM VI SỬ DỤNG
+---------------------------
 Phần mềm này chỉ được phép sử dụng cho mục đích cá nhân, phi thương mại. Mọi hành vi sử dụng phần mềm nhằm mục đích kinh doanh, kiếm lời, hoặc cung cấp dịch vụ có thu phí mà không có sự đồng ý bằng văn bản của tác giả đều bị nghiêm cấm.
 
-2. CẤM PHÂN PHỐI TRÁI PHÉP (DISTRIBUTION RESTRICTIONS)
-------------------------------------------------------
+2. CẤM PHÂN PHỐI TRÁI PHÉP
+--------------------------
 Bạn không được sao chép, phân phối, cấp lại giấy phép (sublicense), cho thuê, bán hoặc chuyển nhượng toàn bộ hoặc một phần mã nguồn, tài nguyên, tài liệu đi kèm hoặc tệp thực thi (lex.exe) của phần mềm này dưới bất kỳ hình thức nào khi chưa có sự cho phép bằng văn bản từ tác giả.
 
-3. SỬA ĐỔI VÀ DẪN XUẤT (MODIFICATIONS)
---------------------------------------
+3. SỬA ĐỔI VÀ DẪN XUẤT
+----------------------
 Việc chỉnh sửa mã nguồn chỉ được phép thực hiện cho mục đích học tập hoặc sử dụng cá nhân nội bộ. Bạn không được sử dụng mã nguồn hoặc các phần dẫn xuất từ dự án này để tạo ra sản phẩm thương mại hoặc phân phối công khai sang bên thứ ba.
-4. TỪ CHỐI BẢO HÀNH VÀ TRÁCH NHIỆM (DISCLAIMER)
-----------------------------------------------
+
+4. TỪ CHỐI BẢO HÀNH VÀ TRÁCH NHIỆM
+----------------------------------
 Phần mềm được cung cấp "NGUYÊN BẢN" (As-Is) mà không có bất kỳ hình thức bảo hành nào, dù là rõ ràng hay ngụ ý. Tác giả sẽ không chịu trách nhiệm cho bất kỳ thiệt hại trực tiếp, gián tiếp hoặc ngẫu nhiên nào phát sinh từ việc sử dụng hoặc không thể sử dụng phần mềm.
 
-==============================================
-ENGLISH VERSION (SUMMARY)
-==============================================
-
-Proprietary License - Personal and Non-Commercial Use Only
-
-1. Personal Use Only: This software is licensed strictly for personal, non-commercial use. Commercial use of this software without prior written consent from the author (hainguyen011) is strictly prohibited.
-2. No Unauthorized Distribution: You may not copy, distribute, sublicense, rent, sell, or transfer the source code, executables (lex.exe), or any associated materials in any form to any third party.
-3. Modifications: Modifications are allowed for personal learning or private use only. You may not distribute modified versions.
-4. Disclaimer: The software is provided "AS IS", without warranty of any kind.
+5. CAM KẾT AN TOÀN VÀ BẢO MẬT
+-----------------------------
+- Phần mềm Lex được thiết kế và lập trình duy nhất cho mục đích hỗ trợ điều khiển máy tính từ xa (chuột, bàn phím, giả lập tay cầm).
+- Phần mềm cam kết không thực hiện bất kỳ hành vi khai thác, xâm nhập, phá hoại hệ thống hoặc đánh cắp dữ liệu nào của người dùng.
+- Lex không thu thập, ghi chép hoặc gửi bất kỳ thông tin cá nhân, mật khẩu hay dữ liệu nhạy cảm nào ra bên ngoài. Mọi dữ liệu truyền tải giữa thiết bị di động và máy tính chỉ được thực hiện trong phạm vi mạng nội bộ (Wi-Fi LAN) của bạn.
+- Quyền Administrator (UAC) được yêu cầu khi khởi chạy chỉ nhằm mục đích cho phép phần mềm gửi các sự kiện nhấn phím/chuột vào các ứng dụng đang chạy ở quyền cao (như Task Manager, game có bộ chống gian lận), hoàn toàn không phục vụ cho mục đích leo thang đặc quyền trái phép hoặc khai thác lỗ hổng hệ thống.
