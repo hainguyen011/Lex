@@ -53,13 +53,15 @@ The Lex ecosystem is split into two independent modules:
 
 ## 4. Download and Run
 
+> **Recommendation**: For the simplest setup and optimal performance, it is highly recommended to run the pre-compiled `Lex.exe` executable. Running from source is intended primarily for development and packaging purposes.
+
 ### Step 1: Download the Executable
-Download the latest pre-compiled release `lex.exe` from the GitHub Releases section of this repository.
+Download the latest pre-compiled release `Lex.exe` from the GitHub Releases section of this repository.
 
 ### Step 2: Run the Server
-1. Double-click the downloaded `lex.exe` file.
+1. Double-click the downloaded `Lex.exe` file.
 2. If prompted, grant **Administrator privileges (UAC)**. This allows the server to send inputs to secure windows and full-screen games.
-3. The server terminal will open, showing a QR code and a secret pairing key.
+3. The server terminal will open, showing a QR code and a secret pairing key. **Keep this terminal window running** at all times during remote operation; closing the terminal will terminate the connection and stop the server.
 
 ### Step 3: Connect your Mobile Device
 1. Make sure your PC and mobile device are connected to the same local Wi-Fi network.
@@ -82,7 +84,7 @@ Lex features an integrated Git-based update and hot-reload mechanism accessible 
 
 ## 6. Compilation and Packaging (for Developers)
 
-To compile the entire Lex application into a single standalone Windows executable (`lex.exe`), run the packaging script in the root directory:
+To compile the entire Lex application into a single standalone Windows executable (`Lex.exe`), run the packaging script in the root directory:
 ```bash
 package.bat
 ```
@@ -90,7 +92,7 @@ This automated batch script will:
 1. Compile the Angular/Ionic mobile client assets into static files.
 2. Synchronize the compiled web files into the server package (`server/www`).
 3. Set up the virtual environment, install PyInstaller, and run the compilation process using `lex.spec`.
-4. Copy the final standalone `lex.exe` executable to the project root directory.
+4. Copy the final standalone `Lex.exe` executable to the project root directory.
 
 ---
 
@@ -100,7 +102,7 @@ This automated batch script will:
 | --- | --- | --- |
 | WARNING: vgamepad not installed | Missing python library in virtual environment | Run `pip install vgamepad` inside the active `venv`. |
 | Gamepad mode does not emulate controller | Missing kernel-level controller driver | Download and install the ViGEmBus driver. |
-| Keyboard/Mouse inputs blocked in games | Lack of administrative permissions | Right-click the terminal and run as Administrator before launching `run.bat` or `lex.exe`. |
+| Keyboard/Mouse inputs blocked in games | Lack of administrative permissions | Right-click the terminal and run as Administrator before launching `run.bat` or `Lex.exe`. |
 | PWA "Install App" button is hidden | Chrome insecure origin policy (HTTP) | Access via `localhost` or enable the unsafely-treat-insecure-origin flag in Chrome: `chrome://flags/#unsafely-treat-insecure-origin-as-secure` |
 
 ---
