@@ -168,5 +168,5 @@ Developed and Maintained by **I2FLabs Viet Nam**.
 This project is proprietary. Non-commercial and personal use only. Unauthorized commercial use, duplication, or distribution is strictly prohibited. 
 
 For full details, please refer to the license files:
-- [LICENSE (Vietnamese Version)](file:///d:/I2FLabs/Tools/Lex/LICENSE)
-- [LICENSE_EN (English Version)](file:///d:/I2FLabs/Tools/Lex/LICENSE_EN)
+- [LICENSE (Vietnamese Version)](./LICENSE)
+- [LICENSE_EN (English Version)](./LICENSE_EN)
