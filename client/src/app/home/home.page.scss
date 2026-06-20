@@ -1,0 +1,1284 @@
+/* --- VERCEL GEIST DESIGN (Minimalist Premium Dark) --- */
+
+ion-content {
+  --background: #000000;
+  --overflow-y: auto;
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Common Font Helpers */
+.monospace-font {
+  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace !important;
+}
+
+/* Container chính */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
+  padding: 24px 20px;
+  box-sizing: border-box;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* --- HEADER SECTION --- */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 28px;
+  width: 100%;
+
+  .header-text {
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #888888;
+      margin: 4px 0 0 0;
+      font-weight: 500;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .disconnect-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #000000;
+      border: 1px solid #333333;
+      color: #888888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.15s ease;
+
+      &:active {
+        color: #ff3b30;
+        border-color: #ff3b30;
+        background: rgba(255, 59, 48, 0.05);
+      }
+    }
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #111111;
+    border: 1px solid #333333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* --- VERCEL SEGMENTED TABS --- */
+.categories-scroll {
+  display: flex;
+  background: #0a0a0a;
+  border: 1px solid #222222;
+
+  &.hidden {
+    display: none !important;
+  }
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 28px;
+  width: 100%;
+  box-sizing: border-box;
+
+  .category-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 7px;
+    background: transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+
+    span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888888;
+    }
+
+    &.active {
+      background: #1e1e1e;
+      
+      span {
+        color: #ffffff;
+      }
+    }
+
+    &.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.dashboard-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+
+/* --- VERCEL CARDS --- */
+.vercel-card {
+  background: #0a0a0a;
+  border: 1px solid #222222;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+
+  .vercel-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .vercel-card-description {
+    font-size: 13px;
+    color: #888888;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+  }
+}
+
+/* Card 1: Status Card */
+.status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    .status-indicator-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ff453a; /* Disconnected: Red */
+        
+        &.connected {
+          background: #00e181; /* Connected: Vercel Green */
+          box-shadow: 0 0 8px rgba(0, 225, 129, 0.4);
+        }
+      }
+    }
+
+    .host-label {
+      font-size: 12px;
+      color: #888888;
+      background: #111111;
+      border: 1px solid #222222;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+  }
+}
+
+/* Card 1.25: Update Card */
+.update-card {
+  border-color: rgba(0, 102, 255, 0.4);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 102, 255, 0.1);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(0, 102, 255, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .update-badge {
+    font-size: 10px;
+    font-weight: 800;
+    color: #0066ff;
+    border: 1px solid rgba(0, 102, 255, 0.3);
+    background: rgba(0, 102, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    align-self: flex-start;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .commit-sha {
+    background: #111111;
+    border: 1px solid #222222;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 12px;
+  }
+
+  .commit-msg {
+    display: block;
+    margin-top: 6px;
+    font-style: italic;
+    color: #666666;
+  }
+
+  .update-btn {
+    background: #ffffff;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.85);
+      transform: scale(0.98);
+    }
+    
+    &[disabled] {
+      background: #111111;
+      color: #555555;
+      border: 1px solid #222222;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+}
+
+/* Card 1.5: Install Card (PWA) */
+.install-card {
+  border-color: #222222;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  /* Sleek background gradient glow for PWA badge */
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(0, 102, 255, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &:hover {
+    border-color: #333333;
+  }
+
+  .pwa-header-text {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .pwa-badge {
+    font-size: 10px;
+    font-weight: 800;
+    color: #0066ff;
+    border: 1px solid rgba(0, 102, 255, 0.3);
+    background: rgba(0, 102, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    align-self: flex-start;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .margin-top-xs {
+    margin-top: 10px;
+    margin-bottom: 8px !important;
+  }
+
+  .install-btn {
+    background: linear-gradient(90deg, #000000 0%, #0c0c0c 100%);
+    border: 1px solid #333333;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    ion-icon {
+      font-size: 16px;
+    }
+
+    &:active {
+      background: #111111;
+      border-color: #ffffff;
+      transform: scale(0.98);
+    }
+  }
+}
+
+/* Vercel Form Elements */
+.vercel-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .vercel-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .vercel-input {
+    width: 100%;
+    height: 40px;
+    background: #000000;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #ffffff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+      border-color: #888888;
+    }
+
+    &::placeholder {
+      color: #444444;
+    }
+  }
+}
+
+/* Vercel Buttons System */
+.vercel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  gap: 8px;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  &.btn-primary {
+    background: #ffffff;
+    color: #000000;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.85);
+      transform: scale(0.98);
+    }
+  }
+
+  &.btn-secondary {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #333333;
+
+    &:active {
+      border-color: #ffffff;
+      transform: scale(0.98);
+    }
+  }
+}
+
+/* Sliders Vercel Style */
+.vercel-range-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .range-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .range-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888888;
+    }
+
+    .range-value {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+  }
+
+  .margin-top-md {
+    margin-top: 18px;
+  }
+
+  .vercel-range-slider {
+    padding: 0;
+
+    ion-range {
+      --bar-background: #1f1f1f;
+      --bar-background-active: #ffffff;
+      --knob-background: #ffffff;
+      --knob-size: 14px;
+      --knob-box-shadow: none;
+    }
+  }
+}
+
+/* Camera scan custom styles */
+#qr-reader {
+  border: 1px solid #333333;
+}
+
+/* --- TOUCHPAD VERCEL VIEW --- */
+.touchpad-container-vercel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+
+  .keyboard-input-bar-vercel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    border-radius: 10px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    animation: fadeIn 0.20s ease-out;
+
+    .keyboard-input-field {
+      flex: 1;
+      height: 36px;
+      background: #000000;
+      border: 1px solid #222222;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 13px;
+      color: #ffffff;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &:focus {
+        border-color: #0066ff;
+        box-shadow: 0 0 8px rgba(0, 102, 255, 0.15);
+      }
+
+      &::placeholder {
+        color: #555555;
+      }
+    }
+
+    .keyboard-action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: #000000;
+      border: 1px solid #222222;
+      color: #888888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:active {
+        background: #111111;
+        border-color: #888888;
+        color: #ffffff;
+      }
+
+      &.clear-btn:active {
+        color: #ff3b30;
+        border-color: #ff3b30;
+      }
+
+      &.close-btn:active {
+        color: #ffffff;
+        border-color: #ffffff;
+      }
+    }
+  }
+
+  .touchpad-surface-vercel {
+    flex: 1;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    touch-action: none;
+    user-select: none;
+    margin-bottom: 16px;
+    min-height: 300px;
+
+    .offline-warning-banner {
+      position: absolute;
+      top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255, 69, 58, 0.08);
+      border: 1px solid rgba(255, 69, 58, 0.2);
+      border-radius: 6px;
+      color: #ff453a;
+      font-size: 11px;
+      font-weight: 600;
+      pointer-events: none;
+      box-shadow: 0 0 10px rgba(255, 69, 58, 0.05);
+
+      ion-icon {
+        font-size: 13px;
+      }
+    }
+
+    .touchpad-status-display {
+      text-align: center;
+      pointer-events: none;
+
+      .minimal-icon {
+        font-size: 44px;
+        color: #ffffff;
+        margin-bottom: 12px;
+      }
+      p {
+        font-size: 15px;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 6px 0;
+      }
+      small {
+        font-size: 12px;
+        color: #888888;
+        font-weight: 500;
+      }
+    }
+
+    .fab-keyboard-vercel {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+      font-size: 20px;
+      z-index: 50;
+
+      &:active {
+        transform: scale(0.92);
+        background: rgba(255, 255, 255, 0.85);
+      }
+    }
+  }
+
+  .vercel-click-buttons {
+    height: 60px;
+    display: flex;
+    gap: 12px;
+
+    .v-click-btn {
+      flex: 1;
+      border-radius: 10px;
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #333333;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:active {
+        border-color: #ffffff;
+        transform: translateY(1px);
+      }
+    }
+  }
+}
+
+/* --- GAMEPAD VERCEL VIEW (Full Screen Handheld Controller) --- */
+.gamepad-vercel-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  background: #000000;
+  z-index: 9999;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+  touch-action: none;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Thin blue electron ambient glow around container */
+  box-shadow: inset 0 0 20px rgba(0, 102, 255, 0.05);
+
+  /* Safe area padding for notched mobile phones */
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+
+  /* Tự động xoay ngang 90 độ khi màn hình đang ở hướng dọc (Portrait) */
+  @media (orientation: portrait) {
+    width: 100vh;
+    width: 100dvh;
+    height: 100vw;
+    height: 100dvw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+    padding: max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-left));
+  }
+}
+
+/* Header & Shoulder Triggers Row */
+.gamepad-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+}
+
+.trigger-group-left,
+.trigger-group-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.g-btn {
+  background: #0a0a0a;
+  color: #ffffff;
+  border: 1px solid #222222;
+  font-weight: 700;
+  box-shadow: none;
+  transition: all 0.08s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  
+  /* Tối ưu hóa Touch trên di động (Native-like) */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  cursor: pointer;
+
+  &:active {
+    background: #111111;
+    border-color: #0066ff;
+    color: #0066ff;
+    box-shadow: 0 0 12px rgba(0, 102, 255, 0.4);
+    transform: scale(0.94);
+  }
+}
+
+/* Wide trigger buttons styled like gamepad shoulders */
+.trigger-btn {
+  width: 52px;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #111111 0%, #070707 100%);
+  border-color: #1f1f1f;
+  
+  &.l2, &.r2 {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+}
+
+/* System Controls in the Center Header */
+.gamepad-system-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .exit-gamepad-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    border-radius: 6px;
+    color: #888888;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    ion-icon {
+      font-size: 14px;
+    }
+
+    &:active {
+      border-color: #ff3b30;
+      color: #ff3b30;
+      background: rgba(255, 59, 48, 0.05);
+      box-shadow: 0 0 10px rgba(255, 59, 48, 0.2);
+    }
+  }
+
+  .profile-select-vercel {
+    display: flex;
+    align-items: center;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    border-radius: 6px;
+    padding: 0 8px;
+    height: 32px;
+
+    .vercel-select-component {
+      --placeholder-color: #888888;
+      --color: white;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      max-width: 110px;
+    }
+  }
+
+  .settings-btn-vercel {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    color: #888888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+
+    &:active {
+      border-color: #ffffff;
+      color: white;
+      background: #111111;
+    }
+  }
+
+  .player-badge-vercel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #0a0a0a;
+    border: 1px solid #333333;
+    height: 20px;
+    line-height: 1;
+
+    &.p-0 { color: #0066ff; border-color: #0066ff; box-shadow: 0 0 6px rgba(0, 102, 255, 0.2); }
+    &.p-1 { color: #ff3b30; border-color: #ff3b30; box-shadow: 0 0 6px rgba(255, 59, 48, 0.2); }
+    &.p-2 { color: #00e181; border-color: #00e181; box-shadow: 0 0 6px rgba(0, 225, 129, 0.2); }
+    &.p-3 { color: #ffcc00; border-color: #ffcc00; box-shadow: 0 0 6px rgba(255, 204, 0, 0.2); }
+  }
+}
+
+/* Main Body of Gamepad */
+.gamepad-main-body {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* --- Gamepad Always-Landscape Layout System --- */
+.gamepad-top-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+}
+
+.gamepad-main-body {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 16px;
+}
+
+.gamepad-wing {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  
+  &.left-wing {
+    flex-direction: row;
+    gap: 28px; /* Space out D-Pad and Joystick side-by-side */
+    justify-content: flex-start;
+    flex: 2;
+  }
+  
+  &.center-wing {
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    flex: 1;
+  }
+  
+  &.right-wing {
+    justify-content: flex-end;
+    flex: 2;
+  }
+}
+
+/* Joystick Styling */
+.joystick-base {
+  width: 136px;
+  height: 136px;
+  background: radial-gradient(circle, #0e0e0e 0%, #030303 100%);
+  border: 1px solid #1f1f1f;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  /* Premium blue inner ring highlight */
+  box-shadow: inset 0 0 10px rgba(0, 102, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.6);
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+}
+
+.joystick-stick {
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle, #2c2c2c 0%, #111111 100%);
+  border: 1.5px solid #333333;
+  border-radius: 50%;
+  position: absolute;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7), inset 0 2px 2px rgba(255, 255, 255, 0.1);
+  transition: transform 0.05s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7), inset 0 2px 2px rgba(255, 255, 255, 0.1);
+  transition: transform 0.05s ease-out;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #0066ff;
+    box-shadow: 0 0 6px #0066ff;
+    opacity: 0.8;
+  }
+}
+
+/* D-Pad Styling */
+.dpad-wrapper {
+  position: relative;
+  width: 135px;
+  height: 135px;
+  background: #050505;
+  border-radius: 50%;
+  border: 1px solid #1a1a1a;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.dpad-btn {
+  position: absolute;
+  width: 45px;
+  height: 45px;
+  border-radius: 5px;
+  font-size: 11px;
+  border: 1px solid #1e1e1e;
+  background: linear-gradient(135deg, #111111 0%, #080808 100%);
+  color: #666666;
+
+  &:active {
+    border-color: #0066ff;
+    color: #ffffff;
+    background: #0d0d0d;
+    box-shadow: 0 0 10px rgba(0, 102, 255, 0.3);
+  }
+
+  &.up {
+    top: 0;
+    left: 45px;
+    border-bottom: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  &.down {
+    bottom: 0;
+    left: 45px;
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  &.left {
+    top: 45px;
+    left: 0;
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  &.right {
+    top: 45px;
+    right: 0;
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+/* Center Wing Details */
+.gamepad-brand {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  color: #222222;
+  text-shadow: 0 0 8px rgba(0, 102, 255, 0.05);
+  user-select: none;
+}
+
+.system-buttons-row {
+  display: flex;
+  gap: 12px;
+
+  .system-btn {
+    width: 44px;
+    height: 24px;
+    border-radius: 4px;
+    font-size: 9px;
+    color: #888888;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    letter-spacing: 0.05em;
+
+    &:active {
+      color: #ffffff;
+      border-color: #888888;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* Right Wing Action Buttons (Diamond Form) */
+.action-buttons-diamond {
+  position: relative;
+  width: 170px;
+  height: 170px;
+
+  .action-btn {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 12px;
+    background: linear-gradient(135deg, #121212 0%, #080808 100%);
+    color: #ffffff;
+    border: 1.5px solid #222222;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+
+    &:active {
+      border-color: #0066ff;
+      color: #0066ff;
+      background: #0d0d0d;
+      box-shadow: 0 0 12px rgba(0, 102, 255, 0.5);
+    }
+
+    &.y-btn {
+      top: 0;
+      left: 57px;
+      border-color: #ffcc00;
+      &:active { border-color: #0066ff; }
+    }
+    &.a-btn {
+      bottom: 0;
+      left: 57px;
+      border-color: #00e181;
+      &:active { border-color: #0066ff; }
+    }
+    &.x-btn {
+      top: 57px;
+      left: 0;
+      border-color: #0066ff;
+    }
+    &.b-btn {
+      top: 57px;
+      right: 0;
+      border-color: #ff3b30;
+      &:active { border-color: #0066ff; }
+    }
+  }
+}
+
+/* Right Wing Action Buttons (Arcade 6 Buttons Layout) */
+.action-buttons-arcade-6 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 200px;
+  height: 130px;
+  justify-content: center;
+  
+  // Nghiêng công thái học (Ergonomic slant)
+  transform: rotate(-12deg);
+  transform-origin: center center;
+
+  .arcade-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+
+    &.row-top {
+      padding-left: 14px; // Lệch sang phải
+    }
+
+    &.row-bottom {
+      padding-right: 14px; // Lệch sang trái
+    }
+  }
+
+  .action-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #121212 0%, #080808 100%);
+    color: #ffffff;
+    border: 1.5px solid #222222;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.08s ease;
+
+    &:active {
+      border-color: #0066ff;
+      color: #0066ff;
+      background: #0d0d0d;
+      box-shadow: 0 0 12px rgba(0, 102, 255, 0.5);
+      transform: scale(0.92);
+    }
+
+    &.x-btn-6 { border-color: #0066ff; }
+    &.y-btn-6 { border-color: #ffcc00; }
+    &.z-btn-6 { border-color: #888888; }
+    
+    &.a-btn-6 { border-color: #00e181; }
+    &.b-btn-6 { border-color: #ff3b30; }
+    &.c-btn-6 { border-color: #aaaaaa; }
+  }
+}
+
+/* --- VERCEL MODAL SETTINGS --- */
+.vercel-modal-card {
+  background: #0a0a0a;
+  border: 1px solid #222222;
+  border-radius: 12px;
+  padding: 8px 16px;
+
+  .vercel-modal-item {
+    --background: transparent;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    
+    .vercel-modal-input {
+      --color: #ffffff;
+      --highlight-color-focused: #ffffff;
+      font-weight: 700;
+    }
+    .vercel-modal-select {
+      font-weight: 700;
+      color: #ffffff;
+      --placeholder-color: #888888;
+    }
+  }
+}
+
+.mapping-section {
+  .mapping-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  .scrollable-mapping {
+    max-height: 220px;
+    overflow-y: auto;
+  }
+}
+
+.mapping-row {
+  border-bottom: 1px solid #111111;
+  padding: 6px 0;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.vercel-modal-raw-input {
+  width: 100%;
+  background: #000000;
+  border: 1px solid #222222;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #888888;
+  }
+}
+
+.modal-buttons-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+
+  .vercel-modal-btn {
+    flex: 1;
+    height: 40px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &.btn-success {
+      background: #ffffff;
+      color: #000000;
+
+      &:active {
+        background: rgba(255,255,255,0.85);
+      }
+    }
+
+    &.btn-danger {
+      background: #000000;
+      color: #ff453a;
+      border: 1px solid #333333;
+
+      &:active {
+        border-color: #ff453a;
+        background: rgba(255, 69, 58, 0.05);
+      }
+    }
+  }
+}

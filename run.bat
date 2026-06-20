@@ -1,6 +1,6 @@
 @echo off
 title Lex All-in-One Server
-cd /d "%~dp0pc-server-py"
+cd /d "%~dp0server"
 echo Dang khoi dong Lex Server...
 echo --------------------------------------
 
