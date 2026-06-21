@@ -343,6 +343,48 @@
                 </ion-select>
               </ion-item>
             </div>
+
+            <div class="mapping-title monospace-font" style="margin-top: 18px;">Motion Steering (Gyro)</div>
+            <div class="vercel-modal-card" style="margin-bottom: 18px;">
+              <ion-item lines="none" class="vercel-modal-item">
+                <ion-toggle [(ngModel)]="currentProfile.enableGyro" (ionChange)="onProfileChange()" style="--handle-background-checked: #ffffff; --background-checked: #00e181; font-weight: 700; width: 100%;">
+                  Enable Gyro Steering
+                </ion-toggle>
+              </ion-item>
+
+              <!-- Warning for Insecure Context (HTTP) -->
+              <div *ngIf="!isSecureContext()" class="gyro-warning-box monospace-font" style="padding: 10px; margin: 8px 0; border: 1px dashed #ff453a; border-radius: 8px; background: rgba(255, 69, 58, 0.05); font-size: 11px; line-height: 1.5; color: #ff857e;">
+                <div style="font-weight: 700; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                  <ion-icon name="warning-outline" style="font-size: 14px; color: #ff453a;"></ion-icon>
+                  <span>Không an toàn (HTTP) - Cảm biến bị chặn</span>
+                </div>
+                <div style="color: #cccccc;">
+                  Trình duyệt di động yêu cầu bảo mật HTTPS để truy cập cảm biến.
+                </div>
+                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 69, 58, 0.15); color: #aaaaaa;">
+                  • <strong>Android Chrome:</strong> Truy cập <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code> trên điện thoại, thêm <code>http://{{serverIp}}:5000</code> vào danh sách, chọn Enabled và Relaunch Chrome.<br>
+                  • <strong>iOS Safari:</strong> Bắt buộc kết nối qua địa chỉ HTTPS (dùng ngrok/Cloudflare tunnel trỏ tới cổng 5000 trên PC).
+                </div>
+              </div>
+              
+              <ng-container *ngIf="currentProfile.enableGyro">
+                <div class="vercel-range-group" style="padding: 8px 0 4px 0;">
+                  <div class="range-header">
+                    <span class="range-title" style="font-size: 13px; font-weight: 600; color: #888888;">Gyro Sensitivity</span>
+                    <span class="range-value monospace-font" style="font-size: 12px; font-weight: 700; color: #ffffff;">{{ currentProfile.gyroSensitivity | number:'1.1-1' }}x</span>
+                  </div>
+                  <ion-range min="0.5" max="3.0" step="0.1" [(ngModel)]="currentProfile.gyroSensitivity" (ionChange)="saveProfiles()" class="vercel-range-slider"></ion-range>
+                </div>
+
+                <div class="vercel-range-group" style="padding: 4px 0 8px 0;">
+                  <div class="range-header">
+                    <span class="range-title" style="font-size: 13px; font-weight: 600; color: #888888;">Gyro Deadzone</span>
+                    <span class="range-value monospace-font" style="font-size: 12px; font-weight: 700; color: #ffffff;">{{ currentProfile.gyroDeadzone }}°</span>
+                  </div>
+                  <ion-range min="1" max="15" step="1" [(ngModel)]="currentProfile.gyroDeadzone" (ionChange)="saveProfiles()" class="vercel-range-slider"></ion-range>
+                </div>
+              </ng-container>
+            </div>
             
             <div *ngIf="currentProfile.isKeyboardMode" class="mapping-section">
               <div class="mapping-title monospace-font">Key Mappings</div>

@@ -11,6 +11,9 @@ interface Profile {
   isKeyboardMode: boolean;
   useJoystick: boolean;
   actionButtonsCount: 4 | 6;
+  enableGyro?: boolean;
+  gyroSensitivity?: number;
+  gyroDeadzone?: number;
   mappings: { [btn: string]: string };
 }
 
@@ -67,6 +70,9 @@ export class HomePage implements OnInit, OnDestroy {
   private joyTouchId: number | null = null;
   private activeJoyKeys = new Set<string>();
   private pressedButtons = new Set<string>();
+  private lastGyroSendTime = 0;
+  private isGyroListening = false;
+  private handleGyroBind = this.handleGyro.bind(this);
   private joystickStickEl: HTMLElement | null = null;
   private gamepadTouches = new Map<number, string>();
   @ViewChild('joystickBase') joystickBase!: ElementRef<HTMLDivElement>;
@@ -180,11 +186,14 @@ export class HomePage implements OnInit, OnDestroy {
         if (p.actionButtonsCount === undefined) p.actionButtonsCount = 4;
         if (p.mappings['C'] === undefined) p.mappings['C'] = 'f';
         if (p.mappings['Z'] === undefined) p.mappings['Z'] = 'g';
+        if (p.enableGyro === undefined) p.enableGyro = false;
+        if (p.gyroSensitivity === undefined) p.gyroSensitivity = 1.0;
+        if (p.gyroDeadzone === undefined) p.gyroDeadzone = 5;
       });
     } else {
       this.profiles = [
-        { id: 'default', name: 'Mặc định (Xbox)', isKeyboardMode: false, useJoystick: true, actionButtonsCount: 4, mappings: { ...this.defaultMappings } },
-        { id: 'keyboard_1', name: 'Bàn phím cơ bản', isKeyboardMode: true, useJoystick: false, actionButtonsCount: 4, mappings: { ...this.defaultMappings } }
+        { id: 'default', name: 'Mặc định (Xbox)', isKeyboardMode: false, useJoystick: true, actionButtonsCount: 4, enableGyro: false, gyroSensitivity: 1.0, gyroDeadzone: 5, mappings: { ...this.defaultMappings } },
+        { id: 'keyboard_1', name: 'Bàn phím cơ bản', isKeyboardMode: true, useJoystick: false, actionButtonsCount: 4, enableGyro: false, gyroSensitivity: 1.0, gyroDeadzone: 5, mappings: { ...this.defaultMappings } }
       ];
     }
     const savedId = localStorage.getItem('current_profile_id');
@@ -208,6 +217,9 @@ export class HomePage implements OnInit, OnDestroy {
       isKeyboardMode: true,
       useJoystick: true,
       actionButtonsCount: 4,
+      enableGyro: false,
+      gyroSensitivity: 1.0,
+      gyroDeadzone: 5,
       mappings: { ...this.defaultMappings }
     });
     this.currentProfileId = newId;
@@ -232,6 +244,7 @@ export class HomePage implements OnInit, OnDestroy {
 
   onProfileChange() {
     this.saveProfiles();
+    this.onGyroToggleChange();
   }
 
   get currentProfile(): Profile | undefined {
@@ -451,8 +464,11 @@ export class HomePage implements OnInit, OnDestroy {
     this.appMode = mode;
     if (mode === 'gamepad') {
       await this.enterFullscreen();
+      this.startGyroIfEnabled();
     } else {
       if (prevMode === 'gamepad') {
+        this.stopGyro();
+        
         // Nhả tất cả các nút đang nhấn trên server tránh bị kẹt phím
         for (const btn of this.gamepadTouches.values()) {
           this.onGpadUp(btn);
@@ -783,21 +799,37 @@ export class HomePage implements OnInit, OnDestroy {
     this.zone.runOutsideAngular(() => {
       window.addEventListener('touchstart', (e: TouchEvent) => {
         if (this.appMode !== 'gamepad') return;
+        const target = e.target as HTMLElement;
+        if (target && typeof target.closest === 'function' && target.closest('ion-modal')) {
+          return;
+        }
         this.handleTouchStart(e);
       }, { passive: false });
 
       window.addEventListener('touchmove', (e: TouchEvent) => {
         if (this.appMode !== 'gamepad') return;
+        const target = e.target as HTMLElement;
+        if (target && typeof target.closest === 'function' && target.closest('ion-modal')) {
+          return;
+        }
         this.handleTouchMove(e);
       }, { passive: false });
 
       window.addEventListener('touchend', (e: TouchEvent) => {
         if (this.appMode !== 'gamepad') return;
+        const target = e.target as HTMLElement;
+        if (target && typeof target.closest === 'function' && target.closest('ion-modal')) {
+          return;
+        }
         this.handleTouchEnd(e);
       }, { passive: false });
 
       window.addEventListener('touchcancel', (e: TouchEvent) => {
         if (this.appMode !== 'gamepad') return;
+        const target = e.target as HTMLElement;
+        if (target && typeof target.closest === 'function' && target.closest('ion-modal')) {
+          return;
+        }
         this.handleTouchEnd(e);
       }, { passive: false });
     });
@@ -968,6 +1000,152 @@ export class HomePage implements OnInit, OnDestroy {
       if (Date.now() - this.lastSendTime > this.THROTTLE_MS && this.connected && this.socket) {
         this.socket.emit('gamepad_joystick', { stick: 'left', x: normX, y: normY });
         this.lastSendTime = Date.now();
+      }
+    }
+  }
+
+  // --- Gyro Steering (Cảm biến nghiêng lái) ---
+  onGyroToggleChange() {
+    if (this.appMode === 'gamepad') {
+      if (this.currentProfile?.enableGyro) {
+        this.startGyroIfEnabled();
+      } else {
+        this.stopGyro();
+      }
+    }
+  }
+
+  isSecureContext(): boolean {
+    return (window as any).isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  }
+
+  async requestGyroPermission(): Promise<boolean> {
+    const deviceOrientationEvent = window.DeviceOrientationEvent as any;
+    if (deviceOrientationEvent && typeof deviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const permissionState = await deviceOrientationEvent.requestPermission();
+        return permissionState === 'granted';
+      } catch (error) {
+        console.error('Lỗi yêu cầu quyền cảm biến:', error);
+        return false;
+      }
+    }
+    return true; // Android hoặc Desktop không cần yêu cầu quyền
+  }
+
+  async startGyroIfEnabled() {
+    const prof = this.currentProfile;
+    if (!prof || !prof.enableGyro) {
+      this.stopGyro();
+      return;
+    }
+
+    if (this.isGyroListening) return;
+
+    if (!this.isSecureContext()) {
+      await this.showToast('Lỗi: Cảm biến yêu cầu kết nối bảo mật HTTPS hoặc thiết lập Flag.');
+      // Giữ nguyên enableGyro trên UI để người dùng thấy thông tin hướng dẫn, không ép tắt
+      return;
+    }
+
+    const hasPermission = await this.requestGyroPermission();
+    if (!hasPermission) {
+      await this.showToast('Không có quyền truy cập cảm biến chuyển động.');
+      prof.enableGyro = false;
+      this.saveProfiles();
+      return;
+    }
+
+    this.isGyroListening = true;
+    window.addEventListener('deviceorientation', this.handleGyroBind);
+    console.log('[GYRO] Bắt đầu lắng nghe cảm biến chuyển động.');
+  }
+
+  stopGyro() {
+    if (!this.isGyroListening) return;
+    this.isGyroListening = false;
+    window.removeEventListener('deviceorientation', this.handleGyroBind);
+    console.log('[GYRO] Đã dừng lắng nghe cảm biến chuyển động.');
+    
+    // Reset phím lái nếu đang ở Keyboard Mode
+    const prof = this.currentProfile;
+    if (prof && prof.isKeyboardMode && this.connected && this.socket) {
+      const leftKey = prof.mappings['LEFT'];
+      const rightKey = prof.mappings['RIGHT'];
+      if (leftKey) this.socket.emit('gamepad_key_up', { key: leftKey });
+      if (rightKey) this.socket.emit('gamepad_key_up', { key: rightKey });
+    }
+  }
+
+  private handleGyro(event: DeviceOrientationEvent) {
+    if (this.appMode !== 'gamepad') return;
+    const prof = this.currentProfile;
+    if (!prof || !prof.enableGyro) return;
+
+    let beta = event.beta || 0;
+    let gamma = event.gamma || 0;
+    
+    let tiltAngle = 0;
+    
+    // Nhận diện hướng xoay màn hình tự động
+    const isPortraitPhysical = window.innerWidth < window.innerHeight;
+    
+    if (isPortraitPhysical) {
+      // Đang cầm dọc vật lý nhưng chơi ngang do CSS
+      // Nghiêng vô lăng trái/phải sẽ xoay quanh trục Y (gamma)
+      tiltAngle = gamma;
+    } else {
+      // Đang cầm ngang vật lý
+      // Nghiêng vô lăng trái/phải sẽ xoay quanh trục X (beta)
+      const orientation = window.screen?.orientation?.type || '';
+      if (orientation.includes('secondary') || window.orientation === -90) {
+        tiltAngle = -beta;
+      } else {
+        tiltAngle = beta;
+      }
+    }
+
+    // Áp dụng deadzone (vùng chết) và sensitivity (độ nhạy)
+    const deadzone = prof.gyroDeadzone || 5; 
+    const sensitivity = prof.gyroSensitivity || 1.0;
+    
+    let steerValue = 0;
+    
+    if (Math.abs(tiltAngle) > deadzone) {
+      // Giả sử nghiêng tối đa 35 độ là lái hết cỡ
+      const maxAngle = 35;
+      const sign = tiltAngle > 0 ? 1 : -1;
+      const activeAngle = Math.abs(tiltAngle) - deadzone;
+      steerValue = sign * (activeAngle / (maxAngle - deadzone)) * sensitivity;
+      
+      // Giới hạn trong khoảng [-1.0, 1.0]
+      if (steerValue > 1.0) steerValue = 1.0;
+      if (steerValue < -1.0) steerValue = -1.0;
+    }
+
+    // Gửi giá trị lái lên máy chủ
+    if (this.connected && this.socket) {
+      if (prof.isKeyboardMode) {
+        // Chế độ Bàn phím: nghiêng trái gửi LEFT, nghiêng phải gửi RIGHT
+        const leftKey = prof.mappings['LEFT'];
+        const rightKey = prof.mappings['RIGHT'];
+        
+        if (steerValue < -0.3) {
+          if (rightKey) this.socket.emit('gamepad_key_up', { key: rightKey });
+          if (leftKey) this.socket.emit('gamepad_key_down', { key: leftKey });
+        } else if (steerValue > 0.3) {
+          if (leftKey) this.socket.emit('gamepad_key_up', { key: leftKey });
+          if (rightKey) this.socket.emit('gamepad_key_down', { key: rightKey });
+        } else {
+          if (leftKey) this.socket.emit('gamepad_key_up', { key: leftKey });
+          if (rightKey) this.socket.emit('gamepad_key_up', { key: rightKey });
+        }
+      } else {
+        // Chế độ Xbox: Ghi đè trực tiếp lên trục X của Joystick trái
+        if (Date.now() - this.lastGyroSendTime > this.THROTTLE_MS) {
+          this.socket.emit('gamepad_joystick', { stick: 'left', x: steerValue, y: this.joyY / this.joyRadius });
+          this.lastGyroSendTime = Date.now();
+        }
       }
     }
   }

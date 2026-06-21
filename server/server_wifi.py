@@ -559,6 +559,95 @@ def display_qr(ip):
     qr.print_ascii(invert=True)
     print(f"{GRAY}────────────────────────────────────────────────{RESET}\n")
 
+def update_terminal_with_ngrok(ngrok_url):
+    init_ansi()
+    
+    WHITE = "\033[97m"
+    GRAY = "\033[90m"
+    BOLD = "\033[1m"
+    RESET = "\033[0m"
+    GREEN = "\033[92m"
+    
+    # Clear console screen safely
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
+    ascii_art = f"""
+{BOLD}{WHITE}    __    ______ _  __
+   / /   / ____/| |/ /
+  / /   / __/   |   / 
+ / /___/ /___  /   |  
+/_____/_____/ /_/|_|  {RESET}
+"""
+    
+    width = 46
+    title_raw = "  LEX SERVER V6.0 - SECURED (NGROK HTTPS)"
+    status_raw = "  * Status:      Active (Secure Tunnel)"
+    ngrok_raw = f"  * HTTPS URL:   {ngrok_url}"
+    key_raw = f"  * Secret Key:  {SECRET_KEY}"
+    web_raw = f"  * Web Portal:  {ngrok_url}?key={SECRET_KEY}"
+    
+    title_line = f"{GRAY}│{RESET}  {BOLD}{GREEN}LEX SERVER V6.0 - SECURED (NGROK HTTPS){RESET}" + " " * (width - len(title_raw)) + f"{GRAY}│{RESET}"
+    status_line = f"{GRAY}│{RESET}  {GREEN}●{RESET} Status:      {BOLD}{WHITE}Active (Secure Tunnel){RESET}" + " " * (width - len(status_raw)) + f"{GRAY}│{RESET}"
+    ngrok_line = f"{GRAY}│{RESET}  {GREEN}●{RESET} HTTPS URL:   {BOLD}{WHITE}{ngrok_url}{RESET}" + " " * (width - len(ngrok_raw)) + f"{GRAY}│{RESET}"
+    key_line = f"{GRAY}│{RESET}  {WHITE}●{RESET} Secret Key:  {BOLD}{WHITE}{SECRET_KEY}{RESET}" + " " * (width - len(key_raw)) + f"{GRAY}│{RESET}"
+    web_line = f"{GRAY}│{RESET}  {GREEN}●{RESET} Web Portal:  {BOLD}{GREEN}{ngrok_url}?key={SECRET_KEY}{RESET}" + " " * (width - len(web_raw)) + f"{GRAY}│{RESET}"
+    
+    print(ascii_art)
+    print(f"{GRAY}┌──────────────────────────────────────────────┐{RESET}")
+    print(title_line)
+    print(f"{GRAY}├──────────────────────────────────────────────┤{RESET}")
+    print(status_line)
+    print(ngrok_line)
+    print(key_line)
+    print(web_line)
+    print(f"{GRAY}└──────────────────────────────────────────────┘{RESET}")
+    print(f"   {GREEN}Secure connection established! Scan to pair:{RESET}\n")
+    
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    url_with_key = f"{ngrok_url}?key={SECRET_KEY}"
+    qr.add_data(url_with_key)
+    qr.make(fit=True)
+    
+    qr.print_ascii(invert=True)
+    print(f"{GRAY}────────────────────────────────────────────────{RESET}\n")
+
+async def check_ngrok_loop(app_instance):
+    import aiohttp
+    last_ngrok_url = None
+    while True:
+        try:
+            # Poll ngrok's local API client (runs on port 4040 by default)
+            async with aiohttp.ClientSession() as session:
+                async with session.get('http://127.0.0.1:4040/api/tunnels', timeout=1) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        tunnels = data.get('tunnels', [])
+                        ngrok_url = None
+                        for t in tunnels:
+                            # Search for an active HTTPS public URL
+                            if t.get('proto') == 'https' or t.get('public_url', '').startswith('https'):
+                                ngrok_url = t.get('public_url')
+                                break
+                        if ngrok_url and ngrok_url != last_ngrok_url:
+                            last_ngrok_url = ngrok_url
+                            update_terminal_with_ngrok(ngrok_url)
+        except Exception:
+            pass
+        await asyncio.sleep(2)
+
+async def start_background_tasks(app_instance):
+    app_instance['ngrok_checker'] = asyncio.create_task(check_ngrok_loop(app_instance))
+
+async def cleanup_background_tasks(app_instance):
+    try:
+        app_instance['ngrok_checker'].cancel()
+        await app_instance['ngrok_checker']
+    except Exception:
+        pass
+
+app.on_startup.append(start_background_tasks)
+app.on_cleanup.append(cleanup_background_tasks)
+
 if __name__ == '__main__':
     if not is_admin():
         print("Yêu cầu nâng quyền Administrator để có khả năng can thiệp vào tất cả ứng dụng/game...")

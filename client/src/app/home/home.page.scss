@@ -980,8 +980,8 @@ ion-content {
 /* D-Pad Styling */
 .dpad-wrapper {
   position: relative;
-  width: 135px;
-  height: 135px;
+  width: 156px;
+  height: 156px;
   background: #050505;
   border-radius: 50%;
   border: 1px solid #1a1a1a;
@@ -990,13 +990,16 @@ ion-content {
 
 .dpad-btn {
   position: absolute;
-  width: 45px;
-  height: 45px;
-  border-radius: 5px;
-  font-size: 11px;
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  font-size: 13px;
   border: 1px solid #1e1e1e;
   background: linear-gradient(135deg, #111111 0%, #080808 100%);
   color: #666666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:active {
     border-color: #0066ff;
@@ -1007,28 +1010,36 @@ ion-content {
 
   &.up {
     top: 0;
-    left: 45px;
+    left: 52px;
+    height: 58px; /* Lấn vào tâm 6px để tăng diện tích nhận diện */
+    padding-bottom: 6px; /* Cân đối icon */
     border-bottom: none;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
   &.down {
     bottom: 0;
-    left: 45px;
+    left: 52px;
+    height: 58px; /* Lấn vào tâm 6px */
+    padding-top: 6px; /* Cân đối icon */
     border-top: none;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
   }
   &.left {
-    top: 45px;
+    top: 52px;
     left: 0;
+    width: 58px; /* Lấn vào tâm 6px */
+    padding-right: 6px; /* Cân đối icon */
     border-right: none;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
   &.right {
-    top: 45px;
+    top: 52px;
     right: 0;
+    width: 58px; /* Lấn vào tâm 6px */
+    padding-left: 6px; /* Cân đối icon */
     border-left: none;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
