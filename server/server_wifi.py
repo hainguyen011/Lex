@@ -240,11 +240,39 @@ async def trigger_update(sid):
             'new_sha': new_sha
         }, to=sid)
         
-        # Đợi 1 giây rồi khởi động lại tiến trình Python
+        # Đợi 1.5 giây rồi khởi động lại
+        is_frozen = getattr(sys, 'frozen', False)
+        
         async def restart_server():
             await asyncio.sleep(1.5)
-            print("Restarting server wifi process...")
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            if is_frozen:
+                print("Running in packaged EXE mode. Creating updater script to rebuild and restart...")
+                updater_content = """@echo off
+title Lex Auto-Updater
+echo Dang doi Lex Server cu dong...
+timeout /t 3 /nobreak >nul
+echo Dang tien hanh bien dich va dong goi lai file Lex.exe voi ma nguon moi...
+cd /d "%~dp0.."
+call package.bat
+echo Dang khoi dong lai Lex Server moi...
+start "" "%~dp0Lex.exe"
+exit
+"""
+                updater_dir = os.path.join(root_dir, 'bin')
+                os.makedirs(updater_dir, exist_ok=True)
+                updater_path = os.path.join(updater_dir, 'updater.bat')
+                try:
+                    with open(updater_path, 'w', encoding='utf-8') as f:
+                        f.write(updater_content)
+                    print(f"Created updater script at {updater_path}. Launching updater...")
+                    os.startfile(updater_path)
+                    sys.exit(0)
+                except Exception as ex:
+                    print(f"Failed to run auto-updater: {ex}")
+                    os.execv(sys.executable, [sys.executable] + sys.argv)
+            else:
+                print("Running in Python script mode. Restarting server wifi process...")
+                os.execv(sys.executable, [sys.executable] + sys.argv)
             
         asyncio.create_task(restart_server())
         
@@ -467,15 +495,52 @@ def get_ip():
         s.close()
     return ip
 
+def init_ansi():
+    if os.name == 'nt':
+        try:
+            ctypes.windll.kernel32.SetConsoleTitleW("Lex Remote Server - Secured v6.0")
+            kernel32 = ctypes.windll.kernel32
+            hOut = kernel32.GetStdHandle(-11)
+            dwMode = ctypes.c_ulong()
+            if kernel32.GetConsoleMode(hOut, ctypes.byref(dwMode)):
+                kernel32.SetConsoleMode(hOut, dwMode.value | 0x0004)
+        except Exception:
+            pass
+
 def display_qr(ip):
+    init_ansi()
+    
+    # ANSI color codes
+    CYAN = "\033[96m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+    RESET = "\033[0m"
+    
     url = f"http://{ip}:5000?key={SECRET_KEY}"
-    print("\n" + "="*40)
-    print(f" LEX SERVER V6 - SECURED")
-    print("="*40)
-    print(f"Server IP: {ip}")
-    print(f"Secret Key: {SECRET_KEY}")
-    print("-" * 40)
-    print("Scan QR code from Lex App to connect:")
+    
+    # ASCII Art LEX
+    ascii_art = f"""
+{CYAN} _      ________   __
+| |    |  ____\\ \\ / /
+| |    | |__   \\ V / 
+| |    |  __|   > <  
+| |____| |____ / . \\ 
+|______|______/_/ \\_\\{RESET}
+"""
+    
+    print(ascii_art)
+    print(f"{GREEN}=============================================={RESET}")
+    print(f" {BOLD}{CYAN}LEX SERVER V6 - SECURED{RESET}")
+    print(f"{GREEN}=============================================={RESET}")
+    print(f" {GREEN}[+]{RESET} Status:      {BOLD}{GREEN}ACTIVE{RESET}")
+    print(f" {GREEN}[+]{RESET} Server IP:   {BOLD}{YELLOW}{ip}{RESET}")
+    print(f" {GREEN}[+]{RESET} Secret Key:  {BOLD}{RED}{SECRET_KEY}{RESET}")
+    print(f" {GREEN}[+]{RESET} Control Web: {BOLD}{UNDERLINE}{CYAN}http://{ip}:5000{RESET}")
+    print(f"{GREEN}----------------------------------------------{RESET}")
+    print(f" {BOLD}Scan QR code from Lex App to connect:{RESET}")
     
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(url)
@@ -483,7 +548,7 @@ def display_qr(ip):
     
     # In QR code ra terminal dưới dạng ASCII
     qr.print_ascii(invert=True)
-    print("="*40 + "\n")
+    print(f"{GREEN}=============================================={RESET}\n")
 
 if __name__ == '__main__':
     if not is_admin():
