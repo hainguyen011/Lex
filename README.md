@@ -59,9 +59,9 @@ The Lex ecosystem is split into two independent modules:
 Obtain the pre-compiled `Lex.exe` executable and ensure it is placed inside the `bin/` directory at the project root (yielding `bin/Lex.exe`).
 
 ### Step 2: Run the Server
-You can launch the server using one of the following methods:
-- **Method A (Recommended)**: Double-click `run.bat` in the project root. This launcher script is engineered to automatically detect and run `bin/Lex.exe` with priority, providing a fast and stable startup. If the executable is not built, it automatically falls back to running the Python source code.
-- **Method B**: Navigate into the `bin/` directory and double-click `Lex.exe` directly.
+Select the method that fits your use case:
+- **For End Users**: Navigate into the `bin/` directory and double-click `Lex.exe`. This is the compiled production build with the embedded web UI, offering the fastest and most stable execution without Python dependencies.
+- **For Developers**: Double-click `run.bat` in the project root directory. This launcher script executes the server directly from the Python source code (`server/server_wifi.py`) using the local virtual environment, allowing you to test and see code changes instantly.
 
 1. If prompted, grant **Administrator privileges (UAC)**. This allows the server to send inputs to secure windows and full-screen games.
 2. The server terminal will open, showing a QR code and a secret pairing key. **Keep this terminal window running** at all times during remote operation; closing the terminal will terminate the connection and stop the server.

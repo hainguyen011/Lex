@@ -510,37 +510,46 @@ def init_ansi():
 def display_qr(ip):
     init_ansi()
     
-    # ANSI color codes
-    CYAN = "\033[96m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    RED = "\033[91m"
+    WHITE = "\033[97m"
+    GRAY = "\033[90m"
     BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
     RESET = "\033[0m"
     
     url = f"http://{ip}:5000?key={SECRET_KEY}"
     
-    # ASCII Art LEX
+    # Slant ASCII Art LEX (Cân đối và hiện đại)
     ascii_art = f"""
-{CYAN} _      ________   __
-| |    |  ____\\ \\ / /
-| |    | |__   \\ V / 
-| |    |  __|   > <  
-| |____| |____ / . \\ 
-|______|______/_/ \\_\\{RESET}
+{BOLD}{WHITE}    __    ______ _  __
+   / /   / ____/| |/ /
+  / /   / __/   |   / 
+ / /___/ /___  /   |  
+/_____/_____/ /_/|_|  {RESET}
 """
     
+    # Tính toán padding động để hộp không bao giờ bị lệch viền
+    width = 46
+    title_raw = "  LEX SERVER V6.0 - SECURED"
+    status_raw = "  * Status:      Active"
+    ip_raw = f"  * Server IP:   {ip}"
+    key_raw = f"  * Secret Key:  {SECRET_KEY}"
+    web_raw = f"  * Web Portal:  http://{ip}:5000"
+    
+    title_line = f"{GRAY}│{RESET}  {BOLD}{WHITE}LEX SERVER V6.0 - SECURED{RESET}" + " " * (width - len(title_raw)) + f"{GRAY}│{RESET}"
+    status_line = f"{GRAY}│{RESET}  {WHITE}●{RESET} Status:      {BOLD}{WHITE}Active{RESET}" + " " * (width - len(status_raw)) + f"{GRAY}│{RESET}"
+    ip_line = f"{GRAY}│{RESET}  {WHITE}●{RESET} Server IP:   {BOLD}{WHITE}{ip}{RESET}" + " " * (width - len(ip_raw)) + f"{GRAY}│{RESET}"
+    key_line = f"{GRAY}│{RESET}  {WHITE}●{RESET} Secret Key:  {BOLD}{WHITE}{SECRET_KEY}{RESET}" + " " * (width - len(key_raw)) + f"{GRAY}│{RESET}"
+    web_line = f"{GRAY}│{RESET}  {WHITE}●{RESET} Web Portal:  {BOLD}{WHITE}http://{ip}:5000{RESET}" + " " * (width - len(web_raw)) + f"{GRAY}│{RESET}"
+    
     print(ascii_art)
-    print(f"{GREEN}=============================================={RESET}")
-    print(f" {BOLD}{CYAN}LEX SERVER V6 - SECURED{RESET}")
-    print(f"{GREEN}=============================================={RESET}")
-    print(f" {GREEN}[+]{RESET} Status:      {BOLD}{GREEN}ACTIVE{RESET}")
-    print(f" {GREEN}[+]{RESET} Server IP:   {BOLD}{YELLOW}{ip}{RESET}")
-    print(f" {GREEN}[+]{RESET} Secret Key:  {BOLD}{RED}{SECRET_KEY}{RESET}")
-    print(f" {GREEN}[+]{RESET} Control Web: {BOLD}{UNDERLINE}{CYAN}http://{ip}:5000{RESET}")
-    print(f"{GREEN}----------------------------------------------{RESET}")
-    print(f" {BOLD}Scan QR code from Lex App to connect:{RESET}")
+    print(f"{GRAY}┌──────────────────────────────────────────────┐{RESET}")
+    print(title_line)
+    print(f"{GRAY}├──────────────────────────────────────────────┤{RESET}")
+    print(status_line)
+    print(ip_line)
+    print(key_line)
+    print(web_line)
+    print(f"{GRAY}└──────────────────────────────────────────────┘{RESET}")
+    print(f"   {GRAY}Scan the QR code from Lex app to pair:{RESET}\n")
     
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(url)
@@ -548,7 +557,7 @@ def display_qr(ip):
     
     # In QR code ra terminal dưới dạng ASCII
     qr.print_ascii(invert=True)
-    print(f"{GREEN}=============================================={RESET}\n")
+    print(f"{GRAY}────────────────────────────────────────────────{RESET}\n")
 
 if __name__ == '__main__':
     if not is_admin():

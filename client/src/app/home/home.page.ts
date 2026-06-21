@@ -66,6 +66,7 @@ export class HomePage implements OnInit, OnDestroy {
   private isJoyActive = false;
   private joyTouchId: number | null = null;
   private activeJoyKeys = new Set<string>();
+  private pressedButtons = new Set<string>();
   private joystickStickEl: HTMLElement | null = null;
   private gamepadTouches = new Map<number, string>();
   @ViewChild('joystickBase') joystickBase!: ElementRef<HTMLDivElement>;
@@ -671,6 +672,10 @@ export class HomePage implements OnInit, OnDestroy {
     const prof = this.currentProfile;
     if (!prof) return;
 
+    // Chan spam/double trigger bang cach check trang thai dang nhan
+    if (this.pressedButtons.has(btn)) return;
+    this.pressedButtons.add(btn);
+
     if (prof.isKeyboardMode) {
       const key = prof.mappings[btn];
       if (key) this.socket.emit('gamepad_key_down', { key });
@@ -687,6 +692,10 @@ export class HomePage implements OnInit, OnDestroy {
     if (!this.connected || !this.socket) return;
     const prof = this.currentProfile;
     if (!prof) return;
+
+    // Chi cho phep nha phim khi dang co ghi nhan nhan phim
+    if (!this.pressedButtons.has(btn)) return;
+    this.pressedButtons.delete(btn);
 
     if (prof.isKeyboardMode) {
       const key = prof.mappings[btn];
@@ -820,11 +829,11 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   private handleTouchMove(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
     if (this.isJoyActive) {
       for (let i = 0; i < e.changedTouches.length; i++) {
         const touch = e.changedTouches[i];
         if (touch.identifier === this.joyTouchId) {
-          if (e.cancelable) e.preventDefault();
           this.updateJoy(touch.clientX, touch.clientY);
           break;
         }
@@ -918,10 +927,35 @@ export class HomePage implements OnInit, OnDestroy {
     const prof = this.currentProfile;
     if (prof && prof.isKeyboardMode && this.connected && this.socket) {
       const newActive = new Set<string>();
-      if (normY > 0.3 && prof.mappings['UP']) newActive.add(prof.mappings['UP']);
-      if (normY < -0.3 && prof.mappings['DOWN']) newActive.add(prof.mappings['DOWN']);
-      if (normX > 0.3 && prof.mappings['RIGHT']) newActive.add(prof.mappings['RIGHT']);
-      if (normX < -0.3 && prof.mappings['LEFT']) newActive.add(prof.mappings['LEFT']);
+      
+      const upKey = prof.mappings['UP'];
+      const downKey = prof.mappings['DOWN'];
+      const rightKey = prof.mappings['RIGHT'];
+      const leftKey = prof.mappings['LEFT'];
+
+      // UP Key with hysteresis
+      if (upKey) {
+        const limit = this.activeJoyKeys.has(upKey) ? 0.2 : 0.45;
+        if (normY > limit) newActive.add(upKey);
+      }
+      
+      // DOWN Key with hysteresis
+      if (downKey) {
+        const limit = this.activeJoyKeys.has(downKey) ? -0.2 : -0.45;
+        if (normY < limit) newActive.add(downKey);
+      }
+      
+      // RIGHT Key with hysteresis
+      if (rightKey) {
+        const limit = this.activeJoyKeys.has(rightKey) ? 0.2 : 0.45;
+        if (normX > limit) newActive.add(rightKey);
+      }
+      
+      // LEFT Key with hysteresis
+      if (leftKey) {
+        const limit = this.activeJoyKeys.has(leftKey) ? -0.2 : -0.45;
+        if (normX < limit) newActive.add(leftKey);
+      }
 
       for (const k of this.activeJoyKeys) {
         if (!newActive.has(k)) this.socket.emit('gamepad_key_up', { key: k });

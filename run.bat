@@ -29,11 +29,6 @@ if not exist "venv\Scripts\python.exe" (
     echo --------------------------------------
 )
 
-if exist "%~dp0bin\Lex.exe" (
-    echo Dang khoi dong Lex Server tu file executable da dong goi...
-    call "%~dp0bin\Lex.exe"
-) else (
-    echo Dang khoi dong Lex Server tu ma nguon Python...
-    call cmd /c .\venv\Scripts\python.exe server_wifi.py
-)
+echo Dang khoi dong Lex Server tu ma nguon Python...
+call cmd /c .\venv\Scripts\python.exe server_wifi.py
 pause
